@@ -1,0 +1,9 @@
+{
+  "name": "Meesho Digital Store",
+  "short_name": "MeeshoStore",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#162447",
+  "theme_color": "#ff3366",
+  "icons": []
+}
