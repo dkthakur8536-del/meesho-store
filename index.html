@@ -23,7 +23,7 @@
     .container {
       max-width: 680px;
       margin: auto;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(15, 23, 42, 0.88);
       backdrop-filter: blur(16px);
       padding: 24px;
       border-radius: 20px;
@@ -59,13 +59,21 @@
       border: none;
     }
     button:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(255, 51, 102, 0.6); }
-    .product-card, .history-item, .category-card {
+    .product-card, .history-item, .category-card, .admin-menu-card {
       background: rgba(255, 255, 255, 0.03);
       padding: 18px;
       margin: 14px 0;
       border-radius: 14px;
       border: 1px solid rgba(255, 255, 255, 0.07);
     }
+    .admin-menu-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .admin-menu-card:hover { background: rgba(255, 255, 255, 0.07); border-color: #ff3366; }
     .hidden { display: none; }
     .top-bar {
       display: flex;
@@ -184,7 +192,6 @@
     <h3 style="color:#f8fafc;">📦 Your Purchases & Digital Deliveries</h3>
     <div id="buyerPurchaseList"></div>
   </div>
-
   <!-- ADMIN PANEL TAB -->
   <div id="adminTab" class="hidden">
     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -198,49 +205,110 @@
     </div>
     
     <div id="adminDashboard" class="hidden">
-      <!-- 1. Add Stock Section -->
-      <div class="admin-section">
-        <h4>📦 Add Stock / JSON / Text Format</h4>
-        <input type="text" id="pCategory" placeholder="Category Name (e.g., Netflix, Accounts, Notes)">
-        <input type="text" id="pName" placeholder="Item Title">
-        <input type="number" id="pPrice" placeholder="Price (₹)">
+      <!-- Clean Menu Buttons (Multi-Page Navigation) -->
+      <div id="adminMainMenuView">
+        <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Select a management module:</p>
         
-        <label style="font-size:13px; color:#cbd5e1;">Input Format:</label>
-        <select id="pType" onchange="toggleFormatInput()">
-          <option value="text">Paste Text / JSON Format</option>
-          <option value="file">Upload JSON / File</option>
-        </select>
-
-        <div id="textInputDiv">
-          <textarea id="pTextContent" placeholder='Paste your JSON or account text here...' style="height:100px; font-family:monospace;"></textarea>
-        </div>
-        <div id="fileInputDiv" class="hidden">
-          <label style="font-size:13px; color:#cbd5e1;">Upload File (.json, .txt):</label>
-          <input type="file" id="pFile">
+        <div class="admin-menu-card" onclick="openAdminSubPage('stockPage')">
+          <div>
+            <h4 style="margin:0; color:#38bdf8;">📁 Category & Stock Management</h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Manage category prices, titles, single & bulk stock upload</p>
+          </div>
+          <span style="font-size:20px; color:#38bdf8;">➔</span>
         </div>
 
-        <button onclick="addProduct()">Publish Item to Store</button>
-      </div>
-
-      <!-- 2. Pending Orders / Payment Verification Queue -->
-      <div class="admin-section" style="border: 1px solid #d97706;">
-        <h4 style="color:#fbbf24;">⚡ Payment Verification & Approval Queue</h4>
-        <div id="adminPendingOrders"></div>
-      </div>
-
-      <!-- 3. Manage Categories & Inventory -->
-      <div class="admin-section">
-        <h4>📊 Categories & Stock Management</h4>
-        <div id="adminCategoryList"></div>
-      </div>
-
-      <!-- 4. Security Settings -->
-      <div class="admin-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAdminSection('securityBox')">
-          <h4 style="margin:0;">🔒 Security & Password Settings</h4>
-          <span>▼</span>
+        <div class="admin-menu-card" onclick="openAdminSubPage('approvalsPage')">
+          <div>
+            <h4 style="margin:0; color:#fbbf24;">⚡ Payment Approvals Queue <span id="pendingBadgeCount" style="background:#dc2626; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Verify UTRs and approve buyer orders</p>
+          </div>
+          <span style="font-size:20px; color:#fbbf24;">➔</span>
         </div>
-        <div id="securityBox" class="hidden" style="margin-top:12px;">
+
+        <div class="admin-menu-card" onclick="openAdminSubPage('logsPage')">
+          <div>
+            <h4 style="margin:0; color:#10b981;">📜 Users & Sales Logs</h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">View registered users and complete transaction history</p>
+          </div>
+          <span style="font-size:20px; color:#10b981;">➔</span>
+        </div>
+
+        <div class="admin-menu-card" onclick="openAdminSubPage('securityPage')">
+          <div>
+            <h4 style="margin:0; color:#f43f5e;">🔒 Security Settings</h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Change admin password and security options</p>
+          </div>
+          <span style="font-size:20px; color:#f43f5e;">➔</span>
+        </div>
+
+        <button onclick="logoutAdmin()" style="background:#dc2626; margin-top:25px;">Logout Admin</button>
+      </div>
+
+      <!-- SUB PAGE 1: CATEGORY & STOCK MANAGEMENT -->
+      <div id="subPage_stockPage" class="hidden">
+        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
+        <div class="admin-section">
+          <h4 style="color:#fbbf24;">📁 Manage Category Pricing & Stock</h4>
+          <input type="text" id="catNameInput" placeholder="Category Name (e.g., Netflix, Accounts)">
+          <input type="text" id="catTitleInput" placeholder="Default Item Title (e.g., 1 Month Premium Account)">
+          <input type="number" id="catPriceInput" placeholder="Fixed Price for Category (₹)">
+          <button onclick="saveCategoryMeta()">Save Category Pricing & Title</button>
+        </div>
+
+        <div class="admin-section">
+          <h4>📦 Add Stock (Single or Bulk)</h4>
+          <input type="text" id="targetCategorySelect" placeholder="Enter Category Name to Add Stock">
+          
+          <label style="font-size:13px; color:#cbd5e1;">Upload Type:</label>
+          <select id="stockAddMode" onchange="toggleStockMode()">
+            <option value="bulk">⚡ Bulk Add Multiple Items (Paste Lines)</option>
+            <option value="single_text">📝 Single Text / JSON</option>
+            <option value="single_file">📁 Upload File (.txt / .json)</option>
+          </select>
+
+          <div id="bulkStockDiv">
+            <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line will be added as 1 item automatically)..." style="height:90px; font-family:monospace;"></textarea>
+          </div>
+          <div id="singleTextDiv" class="hidden">
+            <textarea id="singleTextData" placeholder="Paste single JSON or text..." style="height:90px; font-family:monospace;"></textarea>
+          </div>
+          <div id="singleFileDiv" class="hidden">
+            <input type="file" id="singleFileInput">
+          </div>
+
+          <button onclick="processStockUpload()" style="background:#059669;">Upload Stock to Category</button>
+        </div>
+
+        <div class="admin-section">
+          <h4>📊 Existing Categories & Inventory</h4>
+          <div id="adminCategoryList"></div>
+        </div>
+      </div>
+
+      <!-- SUB PAGE 2: PAYMENT APPROVALS -->
+      <div id="subPage_approvalsPage" class="hidden">
+        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
+        <div class="admin-section" style="border: 1px solid #d97706;">
+          <h4 style="color:#fbbf24;">⚡ Payment Verification & Approval Queue</h4>
+          <div id="adminPendingOrders"></div>
+        </div>
+      </div>
+
+      <!-- SUB PAGE 3: USERS & SALES LOGS -->
+      <div id="subPage_logsPage" class="hidden">
+        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
+        <div class="admin-section">
+          <div id="adminUsersList"></div>
+          <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0;">
+          <div id="adminSalesHistory"></div>
+        </div>
+      </div>
+
+      <!-- SUB PAGE 4: SECURITY SETTINGS -->
+      <div id="subPage_securityPage" class="hidden">
+        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
+        <div class="admin-section">
+          <h4>🔒 Change Admin Password</h4>
           <input type="password" id="newPass" placeholder="Enter New Admin Password">
           <input type="password" id="confirmPass" placeholder="Confirm New Password">
           <div style="display:flex; align-items:center; gap:8px; margin:10px 0;">
@@ -251,20 +319,6 @@
         </div>
       </div>
 
-      <!-- 5. Users & Sales Records -->
-      <div class="admin-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAdminSection('salesBox')">
-          <h4 style="margin:0;">📜 Registered Users & Sales Logs</h4>
-          <span>▼</span>
-        </div>
-        <div id="salesBox" class="hidden" style="margin-top:12px;">
-          <div id="adminUsersList"></div>
-          <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0;">
-          <div id="adminSalesHistory"></div>
-        </div>
-      </div>
-
-      <button onclick="logoutAdmin()" style="background:#dc2626; margin-top:20px;">Logout Admin</button>
     </div>
   </div>
 </div>
@@ -293,7 +347,6 @@
   const merchantUpiId = "9870815480@slc";
 
   window.onload = function() {
-    // Check 10 days session expiry
     let loginTime = localStorage.getItem('loginTime');
     if (loginTime) {
       let daysPassed = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60 * 24);
@@ -472,20 +525,22 @@
     document.getElementById('adminPassInput').value = '';
   }
 
-  function toggleAdminSection(boxId) {
-    let box = document.getElementById(boxId);
-    box.classList.toggle('hidden');
+  function openAdminSubPage(pageId) {
+    document.getElementById('adminMainMenuView').classList.add('hidden');
+    document.getElementById('subPage_stockPage').classList.add('hidden');
+    document.getElementById('subPage_approvalsPage').classList.add('hidden');
+    document.getElementById('subPage_logsPage').classList.add('hidden');
+    document.getElementById('subPage_securityPage').classList.add('hidden');
+
+    document.getElementById('subPage_' + pageId).classList.remove('hidden');
   }
 
-  function toggleFormatInput() {
-    let type = document.getElementById('pType').value;
-    if(type === 'file') {
-      document.getElementById('fileInputDiv').classList.remove('hidden');
-      document.getElementById('textInputDiv').classList.add('hidden');
-    } else {
-      document.getElementById('fileInputDiv').classList.add('hidden');
-      document.getElementById('textInputDiv').classList.remove('hidden');
-    }
+  function closeAdminSubPage() {
+    document.getElementById('subPage_stockPage').classList.add('hidden');
+    document.getElementById('subPage_approvalsPage').classList.add('hidden');
+    document.getElementById('subPage_logsPage').classList.add('hidden');
+    document.getElementById('subPage_securityPage').classList.add('hidden');
+    document.getElementById('adminMainMenuView').classList.remove('hidden');
   }
 
   function toggleAdminPassword() {
@@ -509,6 +564,107 @@
   }
 </script>
 <script>
+  function toggleStockMode() {
+    let mode = document.getElementById('stockAddMode').value;
+    document.getElementById('bulkStockDiv').classList.add('hidden');
+    document.getElementById('singleTextDiv').classList.add('hidden');
+    document.getElementById('singleFileDiv').classList.add('hidden');
+
+    if(mode === 'bulk') document.getElementById('bulkStockDiv').classList.remove('hidden');
+    else if(mode === 'single_text') document.getElementById('singleTextDiv').classList.remove('hidden');
+    else if(mode === 'single_file') document.getElementById('singleFileDiv').classList.remove('hidden');
+  }
+
+  function saveCategoryMeta() {
+    let catName = document.getElementById('catNameInput').value.trim();
+    let title = document.getElementById('catTitleInput').value.trim();
+    let price = document.getElementById('catPriceInput').value.trim();
+
+    if(!catName || !price || !title) { alert('Please fill category name, default title and price!'); return; }
+
+    db.ref('category_meta/' + catName).set({ name: catName, title, price }, (error) => {
+      if(error) { alert('Failed to save category meta.'); }
+      else {
+        alert(`Category [${catName}] pricing & title saved successfully!`);
+        document.getElementById('catNameInput').value = '';
+        document.getElementById('catTitleInput').value = '';
+        document.getElementById('catPriceInput').value = '';
+        loadAdminInventory();
+      }
+    });
+  }
+
+  function processStockUpload() {
+    let category = document.getElementById('targetCategorySelect').value.trim();
+    if(!category) { alert('Please enter target category name!'); return; }
+
+    db.ref('category_meta/' + category).once('value', (snapshot) => {
+      let meta = snapshot.val();
+      if(!meta) {
+        alert('Please first save category pricing & title in the category manager above!');
+        return;
+      }
+
+      let mode = document.getElementById('stockAddMode').value;
+      if(mode === 'bulk') {
+        let bulkText = document.getElementById('bulkStockData').value.trim();
+        if(!bulkText) { alert('Please paste bulk items data!'); return; }
+        let lines = bulkText.split('\n').filter(l => l.trim() !== '');
+        if(lines.length === 0) { alert('No valid lines found!'); return; }
+
+        lines.forEach((line, index) => {
+          let itemName = `${meta.title} #${index + 1}`;
+          let newRef = db.ref('products').push();
+          newRef.set({
+            id: newRef.key,
+            category: category,
+            name: itemName,
+            price: meta.price,
+            content: line.trim(),
+            status: 'available',
+            date: new Date().toLocaleString()
+          });
+        });
+        alert(`Successfully added ${lines.length} stock items to [${category}] at ₹${meta.price}!`);
+        document.getElementById('bulkStockData').value = '';
+        loadAdminInventory();
+
+      } else if(mode === 'single_text') {
+        let textContent = document.getElementById('singleTextData').value.trim();
+        if(!textContent) { alert('Please paste text or JSON content!'); return; }
+        saveProductToDB(category, meta.title, meta.price, textContent);
+        document.getElementById('singleTextData').value = '';
+
+      } else if(mode === 'single_file') {
+        let fileInput = document.getElementById('singleFileInput');
+        if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
+        let file = fileInput.files[0];
+        let reader = new FileReader();
+        reader.onload = function(e) {
+          let content = e.target.result;
+          saveProductToDB(category, meta.title, meta.price, content);
+          fileInput.value = '';
+        };
+        reader.readAsText(file);
+      }
+    });
+  }
+
+  function saveProductToDB(category, name, price, content) {
+    let newRef = db.ref('products').push();
+    newRef.set({ 
+      id: newRef.key, 
+      category, 
+      name, 
+      price, 
+      content, 
+      status: 'available',
+      date: new Date().toLocaleString() 
+    });
+    alert('Item added successfully to stock!');
+    loadAdminInventory();
+  }
+
   function loadCategoriesDropdown() {
     db.ref('products').once('value', (snapshot) => {
       let filter = document.getElementById('categoryFilter');
@@ -602,6 +758,59 @@
     });
   }
 
+  function loadPendingOrders() {
+    db.ref('purchases').once('value', (snapshot) => {
+      let pList = document.getElementById('adminPendingOrders');
+      pList.innerHTML = '';
+      let purchases = snapshot.val();
+      if(!purchases) { 
+        pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders for verification.</p>'; 
+        document.getElementById('pendingBadgeCount').innerText = '0';
+        return; 
+      }
+
+      let pendingCount = 0;
+      Object.keys(purchases).forEach((key) => {
+        let item = purchases[key];
+        if(item.status === 'pending') {
+          pendingCount++;
+          pList.innerHTML += `
+            <div style="background:rgba(0,0,0,0.4); padding:12px; margin:8px 0; border-radius:8px; border-left:4px solid #d97706; font-size:13px;">
+              <b>Buyer:</b> ${item.user}<br>
+              <b>Item:</b> ${item.productName} (₹${item.price})<br>
+              <b>UTR Number:</b> <span style="color:#38bdf8; font-weight:bold; font-size:14px;">${item.utr}</span><br>
+              <b>Date:</b> ${item.date}<br>
+              <div style="margin-top:10px; display:flex; gap:8px;">
+                <button onclick="approveOrder('${item.id}', '${item.productKey}')" style="background:#059669; padding:6px 12px; font-size:12px; margin:0; width:auto;">✅ Verify & Approve</button>
+                <button onclick="rejectOrder('${item.id}', '${item.productKey}')" style="background:#dc2626; padding:6px 12px; font-size:12px; margin:0; width:auto;">❌ Reject</button>
+              </div>
+            </div>
+          `;
+        }
+      });
+      document.getElementById('pendingBadgeCount').innerText = pendingCount;
+      if(pendingCount === 0) { pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders for verification.</p>'; }
+    });
+  }
+
+  function approveOrder(purchaseId, productKey) {
+    db.ref('purchases/' + purchaseId).update({ status: 'approved' });
+    db.ref('products/' + productKey).update({ status: 'sold' });
+    alert('Payment verified and order approved successfully!');
+    loadPendingOrders();
+    loadAdminInventory();
+  }
+
+  function rejectOrder(purchaseId, productKey) {
+    if(confirm('Are you sure you want to reject this payment?')) {
+      db.ref('purchases/' + purchaseId).remove();
+      db.ref('products/' + productKey).update({ status: 'available' });
+      alert('Order rejected and item restocked.');
+      loadPendingOrders();
+      loadAdminInventory();
+    }
+  }
+
   function renderBuyerPurchases() {
     db.ref('purchases').once('value', (snapshot) => {
       let list = document.getElementById('buyerPurchaseList');
@@ -657,243 +866,58 @@
       alert('Failed to copy text!');
     });
   }
-</script>
-<script>
-  function addProduct() {
-    let category = document.getElementById('pCategory').value.trim() || 'General';
-    let name = document.getElementById('pName').value.trim();
-    let price = document.getElementById('pPrice').value.trim();
-    let type = document.getElementById('pType').value;
-
-    if(!name || !price) { alert('Please enter item title and price!'); return; }
-
-    if(type === 'file') {
-      let fileInput = document.getElementById('pFile');
-      if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
-      let file = fileInput.files[0];
-      let reader = new FileReader();
-      reader.onload = function(e) {
-        let content = e.target.result; // Read as plain text/json string correctly
-        saveProductToDB(category, name, price, content);
-      };
-      reader.readAsText(file);
-    } else {
-      let textContent = document.getElementById('pTextContent').value.trim();
-      if(!textContent) { alert('Please enter text or JSON content!'); return; }
-      saveProductToDB(category, name, price, textContent);
-    }
-  }
-
-  function toggleQuickFormat(category) {
-    let type = document.getElementById(`quick_type_${category}`).value;
-    if(type === 'file') {
-      document.getElementById(`quick_file_div_${category}`).classList.remove('hidden');
-      document.getElementById(`quick_text_div_${category}`).classList.add('hidden');
-    } else {
-      document.getElementById(`quick_file_div_${category}`).classList.add('hidden');
-      document.getElementById(`quick_text_div_${category}`).classList.remove('hidden');
-    }
-  }
-
-  function quickAddProduct(category) {
-    let name = document.getElementById(`quick_name_${category}`).value.trim();
-    let price = document.getElementById(`quick_price_${category}`).value.trim();
-    let type = document.getElementById(`quick_type_${category}`).value;
-
-    if(!name || !price) { alert('Fill item name and price!'); return; }
-
-    if(type === 'file') {
-      let fileInput = document.getElementById(`quick_file_${category}`);
-      if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
-      let file = fileInput.files[0];
-      let reader = new FileReader();
-      reader.onload = function(e) {
-        let content = e.target.result;
-        saveProductToDB(category, name, price, content);
-      };
-      reader.readAsText(file);
-    } else {
-      let content = document.getElementById(`quick_text_${category}`).value.trim();
-      if(!content) { alert('Please enter text or JSON content!'); return; }
-      saveProductToDB(category, name, price, content);
-      document.getElementById(`quick_name_${category}`).value = '';
-      document.getElementById(`quick_price_${category}`).value = '';
-      document.getElementById(`quick_text_${category}`).value = '';
-    }
-  }
-
-  function bulkAddStock(category) {
-    let price = document.getElementById(`bulk_price_${category}`).value.trim();
-    let bulkData = document.getElementById(`bulk_data_${category}`).value.trim();
-
-    if(!price || !bulkData) { alert('Please fill price and bulk items data!'); return; }
-
-    let lines = bulkData.split('\n').filter(line => line.trim() !== '');
-    if(lines.length === 0) { alert('No valid items found in bulk text!'); return; }
-
-    lines.forEach((line, index) => {
-      let itemName = `${category} Item #${index + 1}`;
-      let newRef = db.ref('products').push();
-      newRef.set({
-        id: newRef.key,
-        category,
-        name: itemName,
-        price,
-        content: line.trim(),
-        status: 'available',
-        date: new Date().toLocaleString()
-      });
-    });
-
-    alert(`Successfully added ${lines.length} items in bulk to [${category}]!`);
-    document.getElementById(`bulk_price_${category}`).value = '';
-    document.getElementById(`bulk_data_${category}`).value = '';
-    loadAdminInventory();
-  }
-
-  function saveProductToDB(category, name, price, content) {
-    let newRef = db.ref('products').push();
-    newRef.set({ 
-      id: newRef.key, 
-      category, 
-      name, 
-      price, 
-      content, 
-      status: 'available',
-      date: new Date().toLocaleString() 
-    });
-    alert('Item published successfully to store!');
-    loadAdminInventory();
-  }
-
-  function updateItemPrice(key, currentPrice) {
-    let newPrice = prompt('Enter new price (₹):', currentPrice);
-    if(newPrice && !isNaN(newPrice)) {
-      db.ref('products/' + key).update({ price: newPrice });
-      alert('Price updated successfully!');
-      loadAdminInventory();
-    }
-  }
-
-  function loadPendingOrders() {
-    db.ref('purchases').once('value', (snapshot) => {
-      let pList = document.getElementById('adminPendingOrders');
-      pList.innerHTML = '';
-      let purchases = snapshot.val();
-      if(!purchases) { pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders for verification.</p>'; return; }
-
-      let pendingCount = 0;
-      Object.keys(purchases).forEach((key) => {
-        let item = purchases[key];
-        if(item.status === 'pending') {
-          pendingCount++;
-          pList.innerHTML += `
-            <div style="background:rgba(0,0,0,0.4); padding:12px; margin:8px 0; border-radius:8px; border-left:4px solid #d97706; font-size:13px;">
-              <b>Buyer:</b> ${item.user}<br>
-              <b>Item:</b> ${item.productName} (₹${item.price})<br>
-              <b>UTR Number:</b> <span style="color:#38bdf8; font-weight:bold; font-size:14px;">${item.utr}</span><br>
-              <b>Date:</b> ${item.date}<br>
-              <div style="margin-top:10px; display:flex; gap:8px;">
-                <button onclick="approveOrder('${item.id}', '${item.productKey}')" style="background:#059669; padding:6px 12px; font-size:12px; margin:0; width:auto;">✅ Verify & Approve</button>
-                <button onclick="rejectOrder('${item.id}', '${item.productKey}')" style="background:#dc2626; padding:6px 12px; font-size:12px; margin:0; width:auto;">❌ Reject</button>
-              </div>
-            </div>
-          `;
-        }
-      });
-      if(pendingCount === 0) { pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders for verification.</p>'; }
-    });
-  }
-
-  function approveOrder(purchaseId, productKey) {
-    db.ref('purchases/' + purchaseId).update({ status: 'approved' });
-    db.ref('products/' + productKey).update({ status: 'sold' });
-    alert('Payment verified and order approved successfully!');
-    loadPendingOrders();
-    loadAdminInventory();
-  }
-
-  function rejectOrder(purchaseId, productKey) {
-    if(confirm('Are you sure you want to reject this payment?')) {
-      db.ref('purchases/' + purchaseId).remove();
-      db.ref('products/' + productKey).update({ status: 'available' });
-      alert('Order rejected and item restocked.');
-      loadPendingOrders();
-      loadAdminInventory();
-    }
-  }
 
   function loadAdminInventory() {
-    db.ref('products').once('value', (snapshot) => {
-      let cList = document.getElementById('adminCategoryList');
-      cList.innerHTML = '';
-      let products = snapshot.val();
-      if(!products) { cList.innerHTML = '<p>No stock added yet.</p>'; return; }
+    db.ref('category_meta').once('value', (metaSnap) => {
+      let metaMap = metaSnap.val() || {};
+      db.ref('products').once('value', (snapshot) => {
+        let cList = document.getElementById('adminCategoryList');
+        cList.innerHTML = '';
+        let products = snapshot.val();
+        if(!products && Object.keys(metaMap).length === 0) { cList.innerHTML = '<p>No categories or stock added yet.</p>'; return; }
 
-      let categories = {};
-      Object.keys(products).forEach((key) => {
-        let p = products[key];
-        let cat = p.category || 'General';
-        if(!categories[cat]) categories[cat] = { available: 0, sold: 0, pending: 0, items: [] };
-        categories[cat].items.push({ id: key, ...p });
-        if(p.status === 'sold') categories[cat].sold++;
-        else if(p.status === 'pending') categories[cat].pending++;
-        else categories[cat].available++;
-      });
+        let categories = {};
+        Object.keys(metaMap).forEach(cat => {
+          categories[cat] = { price: metaMap[cat].price, title: metaMap[cat].title, available: 0, sold: 0, pending: 0, items: [] };
+        });
 
-      Object.keys(categories).forEach(cat => {
-        let data = categories[cat];
-        let itemsHtml = '';
-        data.items.forEach(item => {
-          let badge = '<span class="badge">Available</span>';
-          if(item.status === 'sold') badge = '<span class="badge badge-sold">Sold</span>';
-          else if(item.status === 'pending') badge = '<span class="badge badge-pending">Pending</span>';
+        if(products) {
+          Object.keys(products).forEach((key) => {
+            let p = products[key];
+            let cat = p.category || 'General';
+            if(!categories[cat]) categories[cat] = { price: p.price, title: p.name, available: 0, sold: 0, pending: 0, items: [] };
+            categories[cat].items.push({ id: key, ...p });
+            if(p.status === 'sold') categories[cat].sold++;
+            else if(p.status === 'pending') categories[cat].pending++;
+            else categories[cat].available++;
+          });
+        }
 
-          itemsHtml += `
-            <div style="background:rgba(255,255,255,0.03); padding:8px; margin:6px 0; border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
-              <div><b>${item.name}</b> (₹${item.price}) ${badge}</div>
-              <div style="display:flex; gap:6px;">
-                <button onclick="updateItemPrice('${item.id}', '${item.price}')" style="width:auto; background:#f59e0b; padding:4px 8px; margin:0; font-size:11px;">Edit Price</button>
+        Object.keys(categories).forEach(cat => {
+          let data = categories[cat];
+          let itemsHtml = '';
+          data.items.forEach(item => {
+            let badge = '<span class="badge">Available</span>';
+            if(item.status === 'sold') badge = '<span class="badge badge-sold">Sold</span>';
+            else if(item.status === 'pending') badge = '<span class="badge badge-pending">Pending</span>';
+
+            itemsHtml += `
+              <div style="background:rgba(255,255,255,0.03); padding:8px; margin:6px 0; border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+                <div><b>${item.name}</b> (₹${item.price}) ${badge}</div>
                 <button onclick="deleteProduct('${item.id}')" style="width:auto; background:#dc2626; padding:4px 8px; margin:0; font-size:11px;">Delete</button>
               </div>
+            `;
+          });
+
+          cList.innerHTML += `
+            <div class="category-card">
+              <h4 style="margin:0 0 5px 0; color:#ff3366;">📁 ${cat} <span style="font-size:12px; color:#fbbf24;">(₹${data.price || 'N/A'})</span></h4>
+              <p style="margin:0 0 10px 0; font-size:13px; color:#cbd5e1;">Available: <b>${data.available}</b> | Pending: <b>${data.pending}</b> | Sold: <b>${data.sold}</b></p>
+              ${itemsHtml}
+              <button onclick="document.getElementById('targetCategorySelect').value='${cat}'; openAdminSubPage('stockPage');" style="margin-top:8px; background:#0284c7; font-size:12px; padding:6px;">⚡ Add Stock to ${cat}</button>
             </div>
           `;
         });
-
-        cList.innerHTML += `
-          <div class="category-card">
-            <h4 style="margin:0 0 5px 0; color:#ff3366;">📁 ${cat}</h4>
-            <p style="margin:0 0 10px 0; font-size:13px; color:#cbd5e1;">Available: <b>${data.available}</b> | Pending: <b>${data.pending}</b> | Sold: <b>${data.sold}</b></p>
-            ${itemsHtml}
-            <div style="background:rgba(0,0,0,0.3); padding:12px; margin-top:12px; border-radius:8px; border:1px dashed rgba(255,255,255,0.2);">
-              <p style="margin:0 0 8px 0; font-size:13px; color:#fbbf24; font-weight:bold;">➕ Quick Add Stock to [${cat}]</p>
-              <input type="text" id="quick_name_${cat}" placeholder="Item Title" style="margin:4px 0; font-size:13px; padding:8px;">
-              <input type="number" id="quick_price_${cat}" placeholder="Price (₹)" style="margin:4px 0; font-size:13px; padding:8px;">
-              
-              <label style="font-size:12px; color:#cbd5e1;">Format Type:</label>
-              <select id="quick_type_${cat}" onchange="toggleQuickFormat('${cat}')" style="margin:4px 0; font-size:13px; padding:8px;">
-                <option value="text">Text / JSON Format</option>
-                <option value="file">File / JSON Upload</option>
-              </select>
-
-              <div id="quick_text_div_${cat}">
-                <textarea id="quick_text_${cat}" placeholder="Paste JSON or text here..." style="margin:4px 0; font-size:13px; padding:8px; height:60px; font-family:monospace;"></textarea>
-              </div>
-              <div id="quick_file_div_${cat}" class="hidden">
-                <input type="file" id="quick_file_${cat}" style="margin:4px 0; font-size:12px;">
-              </div>
-
-              <button onclick="quickAddProduct('${cat}')" style="font-size:13px; padding:8px; margin:8px 0 0 0; background:#059669;">Publish to ${cat}</button>
-            </div>
-
-            <div style="background:rgba(0,0,0,0.3); padding:12px; margin-top:12px; border-radius:8px; border:1px dashed rgba(56, 189, 248, 0.3);">
-              <p style="margin:0 0 8px 0; font-size:13px; color:#38bdf8; font-weight:bold;">⚡ Bulk Add Multiple Items to [${cat}]</p>
-              <input type="number" id="bulk_price_${cat}" placeholder="Price per Item (₹)" style="margin:4px 0; font-size:13px; padding:8px;">
-              <textarea id="bulk_data_${cat}" placeholder="Paste multiple items here (Each line will be saved as a separate item)..." style="margin:4px 0; font-size:13px; padding:8px; height:80px; font-family:monospace;"></textarea>
-              <button onclick="bulkAddStock('${cat}')" style="font-size:13px; padding:8px; margin:8px 0 0 0; background:#0284c7;">Upload Bulk Stock</button>
-            </div>
-          </div>
-        `;
       });
     });
   }
