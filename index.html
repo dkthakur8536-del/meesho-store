@@ -1,465 +1,240 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meesho Digital Store</title>
-    <link rel="manifest" href="manifest.json">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <style>
-        @keyframes bgShift {
-            0% { background: linear-gradient(135deg, #1f4068, #162447); }
-            50% { background: linear-gradient(135deg, #e94560, #0f3460); }
-            100% { background: linear-gradient(135deg, #1f4068, #162447); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            animation: bgShift 12s ease infinite;
-            background-size: 400% 400%;
-            color: #fff;
-            padding: 10px;
-            margin: 0;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 500px;
-            margin: auto;
-            position: relative;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 12px 18px;
-            border-radius: 14px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            margin-bottom: 15px;
-            position: relative;
-            z-index: 100;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 18px;
-            margin-bottom: 15px;
-            border-radius: 14px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            animation: fadeIn 0.4s ease-in-out;
-        }
-        button {
-            background: linear-gradient(135deg, #ff3366, #ff5e62);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
-            margin-top: 8px;
-            box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
-            transition: 0.2s;
-        }
-        button:active { transform: scale(0.97); }
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            color: #fff;
-            outline: none;
-        }
-        input::placeholder, textarea::placeholder { color: #ddd; }
-        .menu-container { position: relative; display: inline-block; }
-        .dots-btn { background: none; border: none; font-size: 26px; cursor: pointer; color: #fff; width: auto; margin: 0; padding: 0 5px; box-shadow: none; }
-        .dropdown-menu { display: none; position: absolute; right: 0; top: 120%; background: #1a1a2e; box-shadow: 0 8px 24px rgba(0,0,0,0.5); border-radius: 8px; z-index: 9999; width: 150px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
-        .dropdown-menu button { background: none; color: #fff; text-align: left; padding: 12px; width: 100%; margin: 0; border-radius: 0; box-shadow: none; }
-        .dropdown-menu button:hover { background: #162447; color: #ff3366; }
-        .section { display: none; }
-        .section.active { display: block; }
-        canvas.qr { display: block; margin: 10px auto; border-radius: 8px; background: #fff; padding: 5px; }
-        pre { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; overflow-x: auto; font-size: 11px; border: 1px solid rgba(255,255,255,0.1); color: #00ffcc; }
-        .badge { background: rgba(0,255,204,0.2); color: #00ffcc; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meesho Digital Store</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    @keyframes rgbFlow {
+      0% { background-position: 0% 0%; }
+      50% { background-position: 0% 100%; }
+      100% { background-position: 0% 0%; }
+    }
+    body {
+      background: linear-gradient(180deg, #162447, #ff3366, #1f4068, #e43f5a);
+      background-size: 400% 400%;
+      animation: rgbFlow 10s ease infinite;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
+    }
+    .container { max-width: 600px; margin: auto; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 12px; }
+    input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: none; }
+    button { background: #ff3366; color: white; font-weight: bold; cursor: pointer; }
+    .product-card, .history-item { background: rgba(255,255,255,0.1); padding: 12px; margin: 10px 0; border-radius: 8px; }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h2 style="margin:0;">✨ Meesho Store ✨</h2>
-            <div id="nav-menu" class="menu-container" style="display:none;">
-                <button class="dots-btn" onclick="toggleMenu()">⋮</button>
-                <div id="dropdown" class="dropdown-menu">
-                    <button onclick="switchTab('shop')">🛍️ Shop</button>
-                    <button onclick="switchTab('downloads')">📥 My Downloads</button>
-                    <button onclick="logout()">🚪 Logout</button>
-                    <button onclick="checkAdminPassword()">👑 Admin</button>
-                </div>
-            </div>
-        </div>
-        <!-- AUTH SECTION -->
-        <div id="auth-section" class="section active">
-            <div class="card" id="login-card">
-                <h3>🔐 Login to Account</h3>
-                <input type="email" id="login_email" placeholder="Email address">
-                <input type="password" id="login_pass" placeholder="Password">
-                <button onclick="loginUser()">Login</button>
-                <p style="text-align:center; margin-top:12px; font-size:14px;">Account nahi hai? <a href="#" onclick="toggleAuthMode(event)" style="color:#ff3366; text-decoration:none; font-weight:bold;">Register karein</a></p>
-            </div>
+<div class="container">
+  <h2>🛍️ Meesho Digital Store</h2>
+  
+  <div style="display:flex; gap:10px; margin-bottom:15px;">
+    <button onclick="switchTab('store')">Store</button>
+    <button onclick="switchTab('myPurchases')">My Purchases</button>
+    <button onclick="switchTab('admin')">Admin Panel</button>
+  </div>
 
-            <div class="card" id="register-card" style="display:none;">
-                <h3>📝 Create New Account</h3>
-                <input type="email" id="reg_email" placeholder="Email address">
-                <input type="password" id="reg_pass" placeholder="Create Password">
-                <button onclick="registerUser()" style="background: linear-gradient(135deg, #28a745, #218838);">Register</button>
-                <p style="text-align:center; margin-top:12px; font-size:14px;">Pehle se account hai? <a href="#" onclick="toggleAuthMode(event)" style="color:#ff3366; text-decoration:none; font-weight:bold;">Login karein</a></p>
-            </div>
-        </div>
+  <div id="storeTab">
+    <h3>Available Products</h3>
+    <div id="productList"></div>
+  </div>
 
-        <!-- SHOP SECTION -->
-        <div id="shop-section" class="section">
-            <div id="store-container"></div>
-        </div>
+  <div id="purchasesTab" class="hidden">
+    <h3>📦 Your Purchased History & Downloads</h3>
+    <div id="buyerPurchaseList"></div>
+  </div>
 
-        <!-- DOWNLOADS SECTION -->
-        <div id="downloads-section" class="section">
-            <div class="card">
-                <h3>📥 Purchased JSON Data</h3>
-                <input type="text" id="check_utr" placeholder="Apna 12-digit UTR daalein">
-                <button onclick="fetchMyData()">Check & Copy JSON</button>
-                <div id="user-downloads-container" style="margin-top: 10px;"></div>
-            </div>
-        </div>
-
-        <!-- ADMIN SECTION -->
-        <div id="admin-section" class="section">
-            <div class="card">
-                <h3>👥 Registered Users Data</h3>
-                <div id="admin-users-container">Loading users...</div>
-            </div>
-
-            <div class="card">
-                <h3>📦 Add Stock (Text or JSON format)</h3>
-                <input type="text" id="add_cat" placeholder="Category Name (e.g. Meesho_JSON)">
-                <textarea id="add_stock_text" rows="6" placeholder="Yahan apna text ya JSON data paste karein..."></textarea>
-                <button onclick="addStockItem()" style="background: linear-gradient(135deg, #28a745, #218838);">Add Stock</button>
-            </div>
-
-            <div class="card">
-                <h3>👑 Pending Orders & Verification</h3>
-                <div id="admin-container">Loading orders...</div>
-            </div>
-            <button onclick="switchTab('shop')" style="background:#555;">Back to Shop</button>
-        </div>
+  <div id="adminTab" class="hidden">
+    <h3>🔐 Admin Panel</h3>
+    <div id="adminLogin">
+      <input type="password" id="adminPassInput" placeholder="Enter Admin Password (default: 8535)">
+      <button onclick="loginAdmin()">Login</button>
     </div>
+    
+    <div id="adminDashboard" class="hidden">
+      <h4>Manage Products & Upload Files</h4>
+      <input type="text" id="pName" placeholder="Product Name">
+      <input type="number" id="pPrice" placeholder="Price (₹)">
+      <input type="text" id="pCategory" placeholder="Category">
+      <label>Upload Digital File:</label>
+      <input type="file" id="pFile">
+      <button onclick="addProduct()">Add Product</button>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
+      <h4>Change Admin Password</h4>
+      <input type="password" id="newPass" placeholder="Enter New Password">
+      <input type="password" id="confirmPass" placeholder="Confirm Password">
+      <div style="display:flex; align-items:center; gap:5px;">
+        <input type="checkbox" id="showPassToggle" onclick="togglePasswordVisibility()" style="width:20px;">
+        <label for="showPassToggle">Show Passwords</label>
+      </div>
+      <button onclick="updateAdminPassword()">Update Password</button>
 
-        function getDb() {
-            let db = localStorage.getItem('meesho_db');
-            if(!db) {
-                let defaultDb = {
-                    users: [],
-                    categories: {
-                        "Meesho_JSON": {
-                            price: 16,
-                            stock: [
-                                { data: '{\n  "mobile": "9767905599",\n  "user_id": 603612901,\n  "phone": "+919767905599"\n}', used: false }
-                            ]
-                        }
-                    },
-                    pending_orders: [],
-                    sold_history: []
-                };
-                localStorage.setItem('meesho_db', JSON.stringify(defaultDb));
-                return defaultDb;
-            }
-            return JSON.parse(db);
-        }
+      <h4>Sales & Purchase History</h4>
+      <div id="adminSalesHistory"></div>
+      <button onclick="logoutAdmin()">Logout Admin</button>
+    </div>
+  </div>
+</div>
 
-        function saveDb(db) {
-            localStorage.setItem('meesho_db', JSON.stringify(db));
-        }
+<script>
+  let adminPassword = localStorage.getItem('adminPass') || '8535';
+  let products = JSON.parse(localStorage.getItem('products')) || [];
+  let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
 
-        function checkSession() {
-            let currentUser = localStorage.getItem('current_user');
-            if(currentUser) {
-                document.getElementById('nav-menu').style.display = 'inline-block';
-                switchTab('shop');
-            } else {
-                document.getElementById('nav-menu').style.display = 'none';
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-                document.getElementById('auth-section').classList.add('active');
-            }
-        }
+  function switchTab(tab) {
+    document.getElementById('storeTab').classList.add('hidden');
+    document.getElementById('purchasesTab').classList.add('hidden');
+    document.getElementById('adminTab').classList.add('hidden');
+    
+    if(tab === 'store') {
+      document.getElementById('storeTab').classList.remove('hidden');
+      renderProducts();
+    } else if(tab === 'myPurchases') {
+      document.getElementById('purchasesTab').classList.remove('hidden');
+      renderBuyerPurchases();
+    } else if(tab === 'admin') {
+      document.getElementById('adminTab').classList.remove('hidden');
+    }
+  }
 
-        function toggleAuthMode(e) {
-            e.preventDefault();
-            let loginCard = document.getElementById('login-card');
-            let regCard = document.getElementById('register-card');
-            if(loginCard.style.display === 'none') {
-                loginCard.style.display = 'block';
-                regCard.style.display = 'none';
-            } else {
-                loginCard.style.display = 'none';
-                regCard.style.display = 'block';
-            }
-        }
+  function loginAdmin() {
+    let val = document.getElementById('adminPassInput').value;
+    if(val === adminPassword) {
+      document.getElementById('adminLogin').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      renderAdminSales();
+    } else {
+      alert('Wrong Password!');
+    }
+  }
 
-        function registerUser() {
-            let email = document.getElementById('reg_email').value.trim();
-            let pass = document.getElementById('reg_pass').value.trim();
-            if(!email || !pass) { alert("Sari details bharein!"); return; }
+  function logoutAdmin() {
+    document.getElementById('adminLogin').classList.remove('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('adminPassInput').value = '';
+  }
 
-            let db = getDb();
-            let existing = db.users.find(u => u.email === email);
-            if(existing) { alert("Yeh email pehle se registered hai!"); return; }
+  function togglePasswordVisibility() {
+    let p1 = document.getElementById('newPass');
+    let p2 = document.getElementById('confirmPass');
+    let type = p1.type === 'password' ? 'text' : 'password';
+    p1.type = type;
+    p2.type = type;
+  }
 
-            db.users.push({ email, pass, time: new Date().toLocaleString() });
-            saveDb(db);
-            alert("Registration successful! Ab login karein.");
-            toggleAuthMode(event);
-        }
+  function updateAdminPassword() {
+    let p1 = document.getElementById('newPass').value;
+    let p2 = document.getElementById('confirmPass').value;
+    if(!p1) { alert('Password cannot be empty'); return; }
+    if(p1 !== p2) { alert('Passwords do not match!'); return; }
+    adminPassword = p1;
+    localStorage.setItem('adminPass', adminPassword);
+    alert('Admin password updated successfully!');
+    document.getElementById('newPass').value = '';
+    document.getElementById('confirmPass').value = '';
+  }
 
-        function loginUser() {
-            let email = document.getElementById('login_email').value.trim();
-            let pass = document.getElementById('login_pass').value.trim();
+  function addProduct() {
+    let name = document.getElementById('pName').value;
+    let price = document.getElementById('pPrice').value;
+    let category = document.getElementById('pCategory').value;
+    let fileInput = document.getElementById('pFile');
 
-            let db = getDb();
-            let user = db.users.find(u => u.email === email && u.pass === pass);
-            if(!user) { alert("Galat email ya password!"); return; }
+    if(!name || !price) { alert('Fill product details!'); return; }
 
-            localStorage.setItem('current_user', email);
-            checkSession();
-        }
+    if(fileInput.files.length > 0) {
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        saveProductData(name, price, category, e.target.result, fileInput.files[0].name);
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else {
+      saveProductData(name, price, category, '', '');
+    }
+  }
 
-        function logout() {
-            localStorage.removeItem('current_user');
-            checkSession();
-        }
+  function saveProductData(name, price, category, fileData, fileName) {
+    products.push({ id: Date.now(), name, price, category, fileData, fileName });
+    localStorage.setItem('products', JSON.stringify(products));
+    alert('Product added successfully with file!');
+    document.getElementById('pName').value = '';
+    document.getElementById('pPrice').value = '';
+    document.getElementById('pCategory').value = '';
+    document.getElementById('pFile').value = '';
+    renderProducts();
+  }
 
-        function toggleMenu() {
-            let menu = document.getElementById('dropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
+  function renderProducts() {
+    let list = document.getElementById('productList');
+    list.innerHTML = '';
+    if(products.length === 0) { list.innerHTML = '<p>No products available.</p>'; return; }
+    
+    products.forEach((p, idx) => {
+      list.innerHTML += `
+        <div class="product-card">
+          <h4>${p.name} (₹${p.price})</h4>
+          <p>Category: ${p.category || 'General'}</p>
+          <input type="text" id="utr_${idx}" placeholder="Enter UPI UTR Number">
+          <button onclick="buyProduct(${idx})">Buy & Verify UTR</button>
+        </div>
+      `;
+    });
+  }
 
-        window.onclick = function(event) {
-            if (!event.target.matches('.dots-btn')) {
-                let dropdowns = document.getElementsByClassName("dropdown-menu");
-                for (let d of dropdowns) {
-                    if (d.style.display === 'block') d.style.display = 'none';
-                }
-            }
-        }
+  function buyProduct(idx) {
+    let utr = document.getElementById(`utr_${idx}`).value;
+    if(!utr) { alert('Please enter UTR number!'); return; }
+    
+    let p = products[idx];
+    purchases.push({
+      productName: p.name,
+      price: p.price,
+      utr: utr,
+      fileData: p.fileData,
+      fileName: p.fileName,
+      date: new Date().toLocaleString()
+    });
+    localStorage.setItem('purchases', JSON.stringify(purchases));
+    alert('Payment submitted! Verified and added to your purchases.');
+    document.getElementById(`utr_${idx}`).value = '';
+    switchTab('myPurchases');
+  }
 
-        function switchTab(tab) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            if(tab === 'shop') {
-                document.getElementById('shop-section').classList.add('active');
-                loadStore();
-            } else if(tab === 'downloads') {
-                document.getElementById('downloads-section').classList.add('active');
-            } else if(tab === 'admin') {
-                document.getElementById('admin-section').classList.add('active');
-                loadAdmin();
-            }
-        }
+  function renderBuyerPurchases() {
+    let list = document.getElementById('buyerPurchaseList');
+    list.innerHTML = '';
+    if(purchases.length === 0) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
 
-        function checkAdminPassword() {
-            let pass = prompt("Admin Password daalein:");
-            if(pass === "1234") {
-                switchTab('admin');
-            } else {
-                alert("Galat password!");
-            }
-        }
+    purchases.forEach(item => {
+      let downloadBtn = item.fileData ? `<a href="${item.fileData}" download="${item.fileName}"><button style="background:#28a745;">Download ${item.fileName}</button></a>` : '<p>No downloadable file attached.</p>';
+      list.innerHTML += `
+        <div class="history-item">
+          <h4>${item.productName} - ₹${item.price}</h4>
+          <p>UTR: ${item.utr} | Date: ${item.date}</p>
+          ${downloadBtn}
+        </div>
+      `;
+    });
+  }
 
-        function loadStore() {
-            let db = getDb();
-            let container = document.getElementById('store-container');
-            container.innerHTML = '';
-            
-            for (let cat in db.categories) {
-                let info = db.categories[cat];
-                let unused = info.stock.filter(i => !i.used).length;
-                container.innerHTML += `
-                    <div class="card">
-                        <h3>📂 ${cat}</h3>
-                        <p>Price: ₹${info.price} | Stock: <span class="badge">${unused} left</span></p>
-                        <input type="number" id="qty_${cat}" placeholder="Quantity (Pcs)" min="1" max="${unused}" oninput="updateTotal('${cat}', ${info.price})">
-                        <p id="total_${cat}" style="font-weight:bold; color:#00ffcc; margin:5px 0;">Total: ₹0</p>
-                        <div id="qr_box_${cat}" style="display:none;">
-                            <canvas id="qr_${cat}" class="qr"></canvas>
-                            <p style="text-align:center; font-size:12px;">UPI: 9870815480@slc</p>
-                            <input type="text" id="utr_${cat}" placeholder="Enter 12-digit UTR Number">
-                            <button onclick="submitOrder('${cat}')">Submit UTR & Order</button>
-                        </div>
-                        <button id="pay_btn_${cat}" onclick="showQR('${cat}')">Proceed to Pay</button>
-                    </div>
-                `;
-            }
-        }
+  function renderAdminSales() {
+    let list = document.getElementById('adminSalesHistory');
+    list.innerHTML = '<h5>All Sales History:</h5>';
+    if(purchases.length === 0) { list.innerHTML += '<p>No sales recorded.</p>'; return; }
 
-        function updateTotal(cat, price) {
-            let qty = document.getElementById(`qty_${cat}`).value || 0;
-            document.getElementById(`total_${cat}`).innerText = "Total: ₹" + (qty * price);
-        }
+    purchases.forEach(item => {
+      list.innerHTML += `
+        <div class="history-item">
+          <p><b>${item.productName}</b> (₹${item.price})<br>UTR: ${item.utr}<br>Date: ${item.date}</p>
+        </div>
+      `;
+    });
+  }
 
-        function showQR(cat) {
-            let qty = document.getElementById(`qty_${cat}`).value;
-            let resText = document.getElementById(`total_${cat}`).innerText;
-            let amount = resText.split("₹")[1];
-            if(!qty || qty <= 0) { alert("Valid quantity daalein!"); return; }
-            
-            let upiUrl = `upi://pay?pa=9870815480@slc&am=${amount}&cu=INR`;
-            
-            document.getElementById(`qr_box_${cat}`).style.display = 'block';
-            document.getElementById(`pay_btn_${cat}`).style.display = 'none';
-
-            new QRious({
-                element: document.getElementById(`qr_${cat}`),
-                value: upiUrl,
-                size: 180
-            });
-        }
-
-        function submitOrder(cat) {
-            let qty = document.getElementById(`qty_${cat}`).value;
-            let utr = document.getElementById(`utr_${cat}`).value;
-            let user = localStorage.getItem('current_user');
-            if(!utr || utr.length !== 12) { alert("Kripya valid 12-digit UTR number daalein!"); return; }
-
-            let db = getDb();
-            db.pending_orders.push({ user, category: cat, qty: parseInt(qty), utr, time: new Date().toLocaleString() });
-            saveDb(db);
-            alert("Order submitted successfully!");
-            loadStore();
-        }
-
-        function addStockItem() {
-            let cat = document.getElementById('add_cat').value.trim();
-            let stockText = document.getElementById('add_stock_text').value.trim();
-            if(!cat || !stockText) { alert("Sari details bharein!"); return; }
-
-            let db = getDb();
-            if(!db.categories[cat]) {
-                db.categories[cat] = { price: 16, stock: [] };
-            }
-            db.categories[cat].stock.push({ data: stockText, used: false });
-            saveDb(db);
-            alert("Stock added successfully as text format!");
-            document.getElementById('add_stock_text').value = '';
-            loadAdmin();
-        }
-
-        function fetchMyData() {
-            let utr = document.getElementById('check_utr').value.trim();
-            let db = getDb();
-            let container = document.getElementById('user-downloads-container');
-            container.innerHTML = '';
-
-            let found = db.sold_history.find(s => s.utr === utr);
-            if(!found) {
-                container.innerHTML = "<p style='color:#ff6b6b;'>Yeh UTR verify nahi hua ya galat hai.</p>";
-                return;
-            }
-
-            let combinedText = found.delivered.map(d => d.data).join("\n\n--------------------\n\n");
-            container.innerHTML = `
-                <p style="color:#00ffcc; font-weight:bold;">✅ Order Verified & Ready!</p>
-                <pre id="json_text">${combinedText}</pre>
-                <button onclick="copyJson()">📋 Copy Text Format</button>
-            `;
-        }
-
-        function copyJson() {
-            let text = document.getElementById('json_text').innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Text Copied to Clipboard!");
-            });
-        }
-
-        function loadAdmin() {
-            let db = getDb();
-            
-            let usersContainer = document.getElementById('admin-users-container');
-            usersContainer.innerHTML = '';
-            if(!db.users || db.users.length === 0) {
-                usersContainer.innerHTML = "<p>Koi registered user nahi hai.</p>";
-            } else {
-                db.users.forEach((u) => {
-                    usersContainer.innerHTML += `
-                        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; margin-bottom:6px; border-radius:6px; border-left:4px solid #ff3366;">
-                            <p style="margin:2px 0;"><b>📧 Email:</b> ${u.email}</p>
-                            <p style="margin:2px 0; font-size:11px; color:#aaa;">🕒 Joined: ${u.time || 'N/A'}</p>
-                        </div>
-                    `;
-                });
-            }
-
-            let container = document.getElementById('admin-container');
-            container.innerHTML = '';
-            if(!db.pending_orders || db.pending_orders.length === 0) {
-                container.innerHTML = "<p>Koi pending order nahi hai.</p>";
-                return;
-            }
-
-            db.pending_orders.forEach((ord, index) => {
-                container.innerHTML += `
-                    <div style="background:rgba(255,255,255,0.05); padding:10px; margin-bottom:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
-                        <p style="margin:4px 0;"><b>👤 User:</b> ${ord.user}</p>
-                        <p style="margin:4px 0;"><b>📂 Cat:</b> ${ord.category} | <b>Qty:</b> ${ord.qty}</p>
-                        <p style="margin:4px 0;"><b>🔢 UTR:</b> <span style="color:#ff3366; font-weight:bold;">${ord.utr}</span></p>
-                        <button style="background: #28a745; width:48%;" onclick="adminAction(${index}, 'approve')">Approve</button>
-                        <button style="background: #dc3545; width:48%; margin-left:4%;" onclick="adminAction(${index}, 'reject')">Reject</button>
-                    </div>
-                `;
-            });
-        }
-
-        function adminAction(index, action) {
-            let db = getDb();
-            let ord = db.pending_orders[index];
-            if(action === 'approve') {
-                let catData = db.categories[ord.category];
-                let unused = catData.stock.filter(i => !i.used);
-                if(unused.length < ord.qty) { alert("Stock insufficient!"); return; }
-
-                let delivered = [];
-                let count = 0;
-                catData.stock.forEach(item => {
-                    if(!item.used && count < ord.qty) {
-                        item.used = true;
-                        delivered.push(item);
-                        count++;
-                    }
-                });
-
-                db.sold_history.push({ user: ord.user, category: ord.category, qty: ord.qty, utr: ord.utr, delivered, time: new Date().toLocaleString() });
-                alert("Order Approved Successfully!");
-            } else {
-                alert("Order Rejected.");
-            }
-
-            db.pending_orders.splice(index, 1);
-            saveDb(db);
-            loadAdmin();
-        }
-
-        checkSession();
-    </script>
+  renderProducts();
+</script>
 </body>
 </html>
