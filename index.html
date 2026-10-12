@@ -102,10 +102,10 @@
     </div>
     
     <div id="adminDashboard" class="hidden">
-      <!-- 1. Add Stock / Items Section -->
+      <!-- 1. Global Add Stock Section -->
       <div class="admin-section">
-        <h4>📦 Add Stock / Items to Category</h4>
-        <input type="text" id="pCategory" placeholder="Category Name (e.g., Netflix, Notes, Software)">
+        <h4>📦 Add New Category & Stock</h4>
+        <input type="text" id="pCategory" placeholder="Category Name (e.g., Netflix, Notes)">
         <input type="text" id="pName" placeholder="Item Name">
         <input type="number" id="pPrice" placeholder="Price (₹)">
         
@@ -116,19 +116,19 @@
         </select>
 
         <div id="textInputDiv">
-          <textarea id="pTextContent" placeholder="Enter account details, license keys or text content here..."></textarea>
+          <textarea id="pTextContent" placeholder="Enter account details or text content here..."></textarea>
         </div>
         <div id="fileInputDiv" class="hidden">
           <label>Upload File:</label>
           <input type="file" id="pFile">
         </div>
 
-        <button onclick="addProduct()">Add Item to Stock</button>
+        <button onclick="addProduct()">Add Item</button>
       </div>
 
-      <!-- 2. Manage Categories & Inventory Status -->
+      <!-- 2. Manage Categories & Direct Stock Add -->
       <div class="admin-section">
-        <h4>📊 Categories & Stock Inventory</h4>
+        <h4>📊 Manage Categories & Quick Stock Add</h4>
         <div id="adminCategoryList"></div>
       </div>
 
@@ -324,7 +324,7 @@
   function logoutAdmin() {
     isAdminLoggedIn = false;
     localStorage.removeItem('isAdminLoggedIn');
-    document.getElementById('adminLogin').classList.remove('hidden');
+    document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminDashboard').classList.add('hidden');
     document.getElementById('adminPassInput').value = '';
   }
@@ -364,7 +364,8 @@
     document.getElementById('newPass').value = '';
     document.getElementById('confirmPass').value = '';
   }
-
+</script>
+<script>
   function addProduct() {
     let category = document.getElementById('pCategory').value.trim() || 'General';
     let name = document.getElementById('pName').value.trim();
@@ -388,6 +389,18 @@
     }
   }
 
+  function quickAddProduct(category) {
+    let name = document.getElementById(`quick_name_${category}`).value.trim();
+    let price = document.getElementById(`quick_price_${category}`).value.trim();
+    let content = document.getElementById(`quick_content_${category}`).value.trim();
+
+    if(!name || !price || !content) { alert('Fill all fields for quick add!'); return; }
+    saveProductToDB(category, name, price, 'text', content, 'text_format');
+    document.getElementById(`quick_name_${category}`).value = '';
+    document.getElementById(`quick_price_${category}`).value = '';
+    document.getElementById(`quick_content_${category}`).value = '';
+  }
+
   function saveProductToDB(category, name, price, type, content, fileName) {
     let newRef = db.ref('products').push();
     newRef.set({ 
@@ -401,12 +414,17 @@
       status: 'available',
       date: new Date().toLocaleString() 
     });
-    alert('Item added successfully to stock!');
-    document.getElementById('pName').value = '';
-    document.getElementById('pPrice').value = '';
-    document.getElementById('pFile').value = '';
-    document.getElementById('pTextContent').value = '';
+    alert('Item added successfully!');
     loadAdminInventory();
+  }
+
+  function updateItemPrice(key, currentPrice) {
+    let newPrice = prompt('Enter new price:', currentPrice);
+    if(newPrice && !isNaN(newPrice)) {
+      db.ref('products/' + key).update({ price: newPrice });
+      alert('Price updated successfully!');
+      loadAdminInventory();
+    }
   }
 
   function loadCategoriesDropdown() {
@@ -541,9 +559,12 @@
         data.items.forEach(item => {
           let badge = item.status === 'sold' ? '<span class="badge badge-sold">Sold</span>' : '<span class="badge">Available</span>';
           itemsHtml += `
-            <div style="background:rgba(255,255,255,0.05); padding:8px; margin:5px 0; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-              <div>${item.name} (₹${item.price}) ${badge}</div>
-              <button onclick="deleteProduct('${item.id}')" style="width:auto; background:#d9534f; padding:4px 8px; margin:0; font-size:12px;">Delete</button>
+            <div style="background:rgba(255,255,255,0.05); padding:8px; margin:5px 0; border-radius:4px; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+              <div><b>${item.name}</b> (₹${item.price}) ${badge}</div>
+              <div style="display:flex; gap:5px;">
+                <button onclick="updateItemPrice('${item.id}', '${item.price}')" style="width:auto; background:#f0ad4e; padding:4px 6px; margin:0; font-size:11px;">Edit Price</button>
+                <button onclick="deleteProduct('${item.id}')" style="width:auto; background:#d9534f; padding:4px 6px; margin:0; font-size:11px;">Delete</button>
+              </div>
             </div>
           `;
         });
@@ -551,8 +572,15 @@
         cList.innerHTML += `
           <div class="category-card">
             <h4 style="margin:0 0 5px 0; color:#ff3366;">📁 ${cat}</h4>
-            <p style="margin:0 0 8px 0; font-size:13px;">Remaining Stock: <b>${data.available}</b> | Sold: <b>${data.sold}</b></p>
+            <p style="margin:0 0 8px 0; font-size:13px;">Available: <b>${data.available}</b> | Sold: <b>${data.sold}</b></p>
             ${itemsHtml}
+            <div style="background:rgba(0,0,0,0.2); padding:8px; margin-top:8px; border-radius:4px;">
+              <p style="margin:0 0 4px 0; font-size:12px; color:#ff3366;">➕ Quick Add Stock to [${cat}]</p>
+              <input type="text" id="quick_name_${cat}" placeholder="Item Name" style="margin:4px 0; font-size:12px; padding:6px;">
+              <input type="number" id="quick_price_${cat}" placeholder="Price (₹)" style="margin:4px 0; font-size:12px; padding:6px;">
+              <textarea id="quick_content_${cat}" placeholder="Text details / account info..." style="margin:4px 0; font-size:12px; padding:6px; height:40px;"></textarea>
+              <button onclick="quickAddProduct('${cat}')" style="font-size:12px; padding:6px; margin:4px 0 0 0; background:#28a745;">Add to ${cat}</button>
+            </div>
           </div>
         `;
       });
