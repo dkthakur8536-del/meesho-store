@@ -20,21 +20,39 @@
       margin: 0;
       padding: 15px;
     }
-    .container { max-width: 600px; margin: auto; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 12px; }
-    input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: none; }
+    .container { max-width: 600px; margin: auto; background: rgba(0,0,0,0.7); padding: 20px; border-radius: 12px; }
+    input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; }
     button { background: #ff3366; color: white; font-weight: bold; cursor: pointer; }
     .product-card, .history-item { background: rgba(255,255,255,0.1); padding: 12px; margin: 10px 0; border-radius: 8px; }
     .hidden { display: none; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .menu-dropdown { position: relative; display: inline-block; }
+    .dropdown-content { display: none; position: absolute; right: 0; background-color: #222; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.3); z-index: 1; border-radius: 6px; }
+    .dropdown-content button { background: none; color: white; text-align: left; padding: 10px; margin: 0; width: 100%; }
+    .dropdown-content button:hover { background: #444; }
+    .menu-dropdown:hover .dropdown-content { display: block; }
   </style>
 </head>
 <body>
 <div class="container">
-  <h2>🛍️ Meesho Digital Store</h2>
+  <div class="top-bar">
+    <h2>🛍️ Meesho Store</h2>
+    <div class="menu-dropdown">
+      <button style="width:auto; padding:8px 14px; font-size:18px;">⋮</button>
+      <div class="dropdown-content">
+        <button onclick="switchTab('store')">Store</button>
+        <button onclick="switchTab('myPurchases')">My Purchases</button>
+        <button onclick="switchTab('auth')">Login / Signup</button>
+        <button onclick="switchTab('admin')">Admin Panel</button>
+      </div>
+    </div>
+  </div>
   
-  <div style="display:flex; gap:10px; margin-bottom:15px;">
-    <button onclick="switchTab('store')">Store</button>
-    <button onclick="switchTab('myPurchases')">My Purchases</button>
-    <button onclick="switchTab('admin')">Admin Panel</button>
+  <div id="authTab" class="hidden">
+    <h3>👤 User Login / Signup</h3>
+    <input type="text" id="authEmail" placeholder="Enter Email or Phone">
+    <input type="password" id="authPass" placeholder="Enter Password">
+    <button onclick="handleAuth()">Submit</button>
   </div>
 
   <div id="storeTab">
@@ -48,9 +66,9 @@
   </div>
 
   <div id="adminTab" class="hidden">
-    <h3>🔐 Admin Panel</h3>
+    <h3>🔐 Admin Panel (Default Pass: 8535)</h3>
     <div id="adminLogin">
-      <input type="password" id="adminPassInput" placeholder="Enter Admin Password (default: 8535)">
+      <input type="password" id="adminPassInput" placeholder="Enter Admin Password">
       <button onclick="loginAdmin()">Login</button>
     </div>
     
@@ -72,24 +90,27 @@
       </div>
       <button onclick="updateAdminPassword()">Update Password</button>
 
-      <h4>Sales & Purchase History</h4>
+      <h4>Sales History</h4>
       <div id="adminSalesHistory"></div>
       <button onclick="logoutAdmin()">Logout Admin</button>
     </div>
   </div>
 </div>
-
 <script>
   let adminPassword = localStorage.getItem('adminPass') || '8535';
   let products = JSON.parse(localStorage.getItem('products')) || [];
   let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
+  let currentUser = localStorage.getItem('currentUser') || null;
 
   function switchTab(tab) {
+    document.getElementById('authTab').classList.add('hidden');
     document.getElementById('storeTab').classList.add('hidden');
     document.getElementById('purchasesTab').classList.add('hidden');
     document.getElementById('adminTab').classList.add('hidden');
     
-    if(tab === 'store') {
+    if(tab === 'auth') {
+      document.getElementById('authTab').classList.remove('hidden');
+    } else if(tab === 'store') {
       document.getElementById('storeTab').classList.remove('hidden');
       renderProducts();
     } else if(tab === 'myPurchases') {
@@ -98,6 +119,15 @@
     } else if(tab === 'admin') {
       document.getElementById('adminTab').classList.remove('hidden');
     }
+  }
+
+  function handleAuth() {
+    let email = document.getElementById('authEmail').value;
+    if(!email) { alert('Please enter email/phone'); return; }
+    currentUser = email;
+    localStorage.setItem('currentUser', currentUser);
+    alert('Logged in successfully!');
+    switchTab('store');
   }
 
   function loginAdmin() {
@@ -159,7 +189,7 @@
   function saveProductData(name, price, category, fileData, fileName) {
     products.push({ id: Date.now(), name, price, category, fileData, fileName });
     localStorage.setItem('products', JSON.stringify(products));
-    alert('Product added successfully with file!');
+    alert('Product added successfully!');
     document.getElementById('pName').value = '';
     document.getElementById('pPrice').value = '';
     document.getElementById('pCategory').value = '';
@@ -190,6 +220,7 @@
     
     let p = products[idx];
     purchases.push({
+      user: currentUser || 'Guest',
       productName: p.name,
       price: p.price,
       utr: utr,
@@ -198,7 +229,7 @@
       date: new Date().toLocaleString()
     });
     localStorage.setItem('purchases', JSON.stringify(purchases));
-    alert('Payment submitted! Verified and added to your purchases.');
+    alert('Payment verified and added to your purchases!');
     document.getElementById(`utr_${idx}`).value = '';
     switchTab('myPurchases');
   }
@@ -222,13 +253,13 @@
 
   function renderAdminSales() {
     let list = document.getElementById('adminSalesHistory');
-    list.innerHTML = '<h5>All Sales History:</h5>';
+    list.innerHTML = '';
     if(purchases.length === 0) { list.innerHTML += '<p>No sales recorded.</p>'; return; }
 
     purchases.forEach(item => {
       list.innerHTML += `
         <div class="history-item">
-          <p><b>${item.productName}</b> (₹${item.price})<br>UTR: ${item.utr}<br>Date: ${item.date}</p>
+          <p><b>User:</b> ${item.user}<br><b>Product:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> ${item.utr}<br><b>Date:</b> ${item.date}</p>
         </div>
       `;
     });
