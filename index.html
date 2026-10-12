@@ -50,7 +50,7 @@
     </div>
   </div>
   
-  <!-- AUTH SECTION -->
+  <!-- AUTH TAB -->
   <div id="authContainer">
     <h3 id="authTitle">🔐 User Signup</h3>
     <input type="text" id="authEmail" placeholder="Enter Email or Phone">
@@ -74,7 +74,7 @@
 
   <!-- PURCHASES TAB -->
   <div id="purchasesTab" class="hidden">
-    <h3>📦 Your Purchased History & Content</h3>
+    <h3>📦 Your Purchased History & Downloads</h3>
     <div id="buyerPurchaseList"></div>
   </div>
 
@@ -88,65 +88,31 @@
     </div>
     
     <div id="adminDashboard" class="hidden">
-      
-      <!-- 1. Add Stock / Products Section -->
       <div class="admin-section">
-        <button onclick="toggleAdminView('addProductBox')">📦 Add Stock / Items</button>
-        <div id="addProductBox" class="hidden">
-          <h4>Add Item to Category</h4>
-          <input type="text" id="pCategory" placeholder="Category Name (e.g., Netflix, Notes)">
-          <input type="text" id="pName" placeholder="Item Name">
-          <input type="number" id="pPrice" placeholder="Price (₹)">
-          
-          <label>Select Format Type:</label>
-          <select id="pType" onchange="toggleFormatInput()">
-            <option value="file">File Upload</option>
-            <option value="text">Text / Account Details Format</option>
-          </select>
-
-          <div id="fileInputDiv">
-            <label>Upload File:</label>
-            <input type="file" id="pFile">
-          </div>
-          <div id="textInputDiv" class="hidden">
-            <textarea id="pTextContent" placeholder="Enter text details or account info here..."></textarea>
-          </div>
-
-          <button onclick="addProduct()">Save Item</button>
-        </div>
+        <h4>Manage Products & Upload Files</h4>
+        <input type="text" id="pName" placeholder="Product Name">
+        <input type="number" id="pPrice" placeholder="Price (₹)">
+        <input type="text" id="pCategory" placeholder="Category">
+        <label>Upload Digital File:</label>
+        <input type="file" id="pFile">
+        <button onclick="addProduct()">Add Product</button>
       </div>
 
-      <!-- 2. Manage Category & Prices Section -->
       <div class="admin-section">
-        <button onclick="toggleAdminView('manageCategoryBox'); loadAdminCategories();">⚙️ Manage Category & Prices</button>
-        <div id="manageCategoryBox" class="hidden">
-          <h4>Existing Categories & Items</h4>
-          <div id="categoryManageList"></div>
+        <h4>Change Admin Password</h4>
+        <input type="password" id="newPass" placeholder="Enter New Password">
+        <input type="password" id="confirmPass" placeholder="Confirm Password">
+        <div style="display:flex; align-items:center; gap:5px;">
+          <input type="checkbox" id="showPassToggle" onclick="toggleAdminPassword()" style="width:20px;">
+          <label for="showPassToggle">Show Passwords</label>
         </div>
+        <button onclick="updateAdminPassword()">Update Password</button>
       </div>
 
-      <!-- 3. Security / Password Settings Section -->
       <div class="admin-section">
-        <button onclick="toggleAdminView('securityBox')">🔒 Security & Password Settings</button>
-        <div id="securityBox" class="hidden">
-          <h4>Change Admin Password</h4>
-          <input type="password" id="newPass" placeholder="Enter New Password">
-          <input type="password" id="confirmPass" placeholder="Confirm Password">
-          <div style="display:flex; align-items:center; gap:5px;">
-            <input type="checkbox" id="showPassToggle" onclick="toggleAdminPassword()" style="width:20px;">
-            <label for="showPassToggle">Show Passwords</label>
-          </div>
-          <button onclick="updateAdminPassword()">Update Password</button>
-        </div>
-      </div>
-
-      <!-- 4. Sales & Users History Section -->
-      <div class="admin-section">
-        <button onclick="toggleAdminView('historyBox'); loadAdminHistory();">📊 Users & Sales History</button>
-        <div id="historyBox" class="hidden">
-          <div id="adminUsersList"></div>
-          <div id="adminSalesHistory"></div>
-        </div>
+        <h4>Registered Users & Sales History</h4>
+        <div id="adminUsersList"></div>
+        <div id="adminSalesHistory"></div>
       </div>
 
       <button onclick="logoutAdmin()" style="background:#444; margin-top:15px;">Logout Admin</button>
@@ -158,13 +124,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
   const firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID"
+    apiKey: "AIzaSyC_isXJoTlt_oHbo7CXF8_Dww58jdEgx_w",
+    authDomain: "meesho-store-e99ab.firebaseapp.com",
+    databaseURL: "https://meesho-store-e99ab-default-rtdb.firebaseio.com",
+    projectId: "meesho-store-e99ab",
+    storageBucket: "meesho-store-e99ab.appspot.com",
+    messagingSenderId: "1084160729246",
+    appId: "1:1084160729246:web:19570566ee411d155b1b8f",
+    measurementId: "G-D7QMJJ9XT3"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
@@ -173,14 +140,11 @@
   let currentUser = localStorage.getItem('currentUser') || null;
   let isLoginMode = false;
 
-  // Persistent session check on load
-  window.onload = function() {
-    if (currentUser) {
-      document.getElementById('authContainer').classList.add('hidden');
-      document.getElementById('menuBar').style.display = 'block';
-      switchTab('store');
-    }
-  };
+  if (currentUser) {
+    document.getElementById('authContainer').classList.add('hidden');
+    document.getElementById('menuBar').style.display = 'block';
+    switchTab('store');
+  }
 
   function toggleAuthMode() {
     isLoginMode = !isLoginMode;
@@ -277,7 +241,7 @@
     if(val === adminPassword) {
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminDashboard').classList.remove('hidden');
-      loadAdminCategories();
+      renderAdminData();
     } else {
       alert('Wrong Password!');
     }
@@ -287,22 +251,6 @@
     document.getElementById('adminLogin').classList.remove('hidden');
     document.getElementById('adminDashboard').classList.add('hidden');
     document.getElementById('adminPassInput').value = '';
-  }
-
-  function toggleAdminView(boxId) {
-    let box = document.getElementById(boxId);
-    box.classList.toggle('hidden');
-  }
-
-  function toggleFormatInput() {
-    let type = document.getElementById('pType').value;
-    if(type === 'file') {
-      document.getElementById('fileInputDiv').classList.remove('hidden');
-      document.getElementById('textInputDiv').classList.add('hidden');
-    } else {
-      document.getElementById('fileInputDiv').classList.add('hidden');
-      document.getElementById('textInputDiv').classList.remove('hidden');
-    }
   }
 
   function toggleAdminPassword() {
@@ -326,37 +274,33 @@
   }
 
   function addProduct() {
-    let category = document.getElementById('pCategory').value.trim() || 'General';
-    let name = document.getElementById('pName').value.trim();
-    let price = document.getElementById('pPrice').value.trim();
-    let type = document.getElementById('pType').value;
+    let name = document.getElementById('pName').value;
+    let price = document.getElementById('pPrice').value;
+    let category = document.getElementById('pCategory').value;
+    let fileInput = document.getElementById('pFile');
 
-    if(!name || !price) { alert('Fill item name and price!'); return; }
+    if(!name || !price) { alert('Fill product details!'); return; }
 
-    if(type === 'file') {
-      let fileInput = document.getElementById('pFile');
-      if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
+    if(fileInput.files.length > 0) {
       let reader = new FileReader();
       reader.onload = function(e) {
-        saveProductToDB(category, name, price, type, e.target.result, fileInput.files[0].name);
+        saveProductData(name, price, category, e.target.result, fileInput.files[0].name);
       };
       reader.readAsDataURL(fileInput.files[0]);
     } else {
-      let textContent = document.getElementById('pTextContent').value.trim();
-      if(!textContent) { alert('Please enter text content!'); return; }
-      saveProductToDB(category, name, price, type, textContent, 'text_format');
+      saveProductData(name, price, category, '', '');
     }
   }
 
-  function saveProductToDB(category, name, price, type, content, fileName) {
-    let newRef = db.ref('products').push();
-    newRef.set({ id: newRef.key, category, name, price, type, content, fileName });
-    alert('Item added successfully!');
+  function saveProductData(name, price, category, fileData, fileName) {
+    let newProdRef = db.ref('products').push();
+    newProdRef.set({ id: newProdRef.key, name, price, category, fileData, fileName });
+    alert('Product added successfully!');
     document.getElementById('pName').value = '';
     document.getElementById('pPrice').value = '';
+    document.getElementById('pCategory').value = '';
     document.getElementById('pFile').value = '';
-    document.getElementById('pTextContent').value = '';
-    loadAdminCategories();
+    renderProducts();
   }
 
   function renderProducts() {
@@ -371,36 +315,32 @@
         list.innerHTML += `
           <div class="product-card">
             <h4>${p.name} (₹${p.price})</h4>
-            <p><b>Category:</b> ${p.category}</p>
+            <p>Category: ${p.category || 'General'}</p>
             <input type="text" id="utr_${key}" placeholder="Enter UPI UTR Number">
-            <button onclick="buyProduct('${key}', '${p.name}', '${p.price}')">Buy & Verify UTR</button>
+            <button onclick="buyProduct('${key}', '${p.name}', '${p.price}', '${p.fileData || ''}', '${p.fileName || ''}')">Buy & Verify UTR</button>
           </div>
         `;
       });
     });
   }
 
-  function buyProduct(key, name, price) {
-    let utr = document.getElementById(`utr_${key}`).value.trim();
+  function buyProduct(key, name, price, fileData, fileName) {
+    let utr = document.getElementById(`utr_${key}`).value;
     if(!utr) { alert('Please enter UTR number!'); return; }
     
-    db.ref('products/' + key).once('value', (snapshot) => {
-      let p = snapshot.val();
-      let purchaseRef = db.ref('purchases').push();
-      purchaseRef.set({
-        user: currentUser,
-        productName: name,
-        price: price,
-        utr: utr,
-        type: p.type,
-        content: p.content,
-        fileName: p.fileName,
-        date: new Date().toLocaleString()
-      });
-      alert('Payment verified! Added to your purchases.');
-      document.getElementById(`utr_${key}`).value = '';
-      switchTab('myPurchases');
+    let purchaseRef = db.ref('purchases').push();
+    purchaseRef.set({
+      user: currentUser,
+      productName: name,
+      price: price,
+      utr: utr,
+      fileData: fileData,
+      fileName: fileName,
+      date: new Date().toLocaleString()
     });
+    alert('Payment verified and added to your purchases!');
+    document.getElementById(`utr_${key}`).value = '';
+    switchTab('myPurchases');
   }
 
   function renderBuyerPurchases() {
@@ -410,51 +350,26 @@
       let purchases = snapshot.val();
       if(!purchases) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
 
-      let count = 0;
+      let userPurchasesCount = 0;
       Object.keys(purchases).forEach((key) => {
         let item = purchases[key];
         if(item.user === currentUser) {
-          count++;
-          let deliveryContent = '';
-          if(item.type === 'file') {
-            deliveryContent = `<a href="${item.content}" download="${item.fileName}"><button style="background:#28a745;">Download ${item.fileName}</button></a>`;
-          } else {
-            deliveryContent = `<div style="background:rgba(0,0,0,0.5); padding:8px; border-radius:4px; margin-top:5px;"><b>Details:</b> <pre style="white-space:pre-wrap;">${item.content}</pre></div>`;
-          }
-
+          userPurchasesCount++;
+          let downloadBtn = item.fileData ? `<a href="${item.fileData}" download="${item.fileName}"><button style="background:#28a745;">Download ${item.fileName}</button></a>` : '<p>No downloadable file attached.</p>';
           list.innerHTML += `
             <div class="history-item">
               <h4>${item.productName} - ₹${item.price}</h4>
               <p>UTR: ${item.utr} | Date: ${item.date}</p>
-              ${deliveryContent}
+              ${downloadBtn}
             </div>
           `;
         }
       });
-      if(count === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
+      if(userPurchasesCount === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
     });
   }
 
-  function loadAdminCategories() {
-    db.ref('products').once('value', (snapshot) => {
-      let cList = document.getElementById('categoryManageList');
-      cList.innerHTML = '';
-      let products = snapshot.val();
-      if(!products) { cList.innerHTML = '<p>No items found.</p>'; return; }
-
-      Object.keys(products).forEach((key) => {
-        let p = products[key];
-        cList.innerHTML += `
-          <div style="background:rgba(255,255,255,0.05); padding:8px; margin:5px 0; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-            <div><b>[${p.category}]</b> ${p.name} - ₹${p.price}</div>
-            <button onclick="deleteProduct('${key}')" style="width:auto; background:#d9534f; padding:5px 10px; margin:0;">Delete</button>
-          </div>
-        `;
-      });
-    });
-  }
-
-  function loadAdminHistory() {
+  function renderAdminData() {
     db.ref('users').once('value', (snapshot) => {
       let uList = document.getElementById('adminUsersList');
       uList.innerHTML = '<h5>Registered Users:</h5>';
@@ -463,7 +378,7 @@
       else {
         Object.keys(users).forEach((key) => {
           let u = users[key];
-          uList.innerHTML += `<div class="history-item"><p><b>User:</b> ${u.email} | <b>Joined:</b> ${u.date}</p></div>`;
+          uList.innerHTML += `<div class="history-item"><p><b>Email/Phone:</b> ${u.email}<br><b>Joined:</b> ${u.date}</p></div>`;
         });
       }
     });
@@ -478,19 +393,11 @@
         let item = purchases[key];
         sList.innerHTML += `
           <div class="history-item">
-            <p><b>Buyer:</b> ${item.user}<br><b>Item:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> ${item.utr}<br><b>Date:</b> ${item.date}</p>
+            <p><b>User:</b> ${item.user}<br><b>Product:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> ${item.utr}<br><b>Date:</b> ${item.date}</p>
           </div>
         `;
       });
     });
-  }
-
-  function deleteProduct(key) {
-    if(confirm('Are you sure you want to delete this item?')) {
-      db.ref('products/' + key).remove();
-      alert('Item deleted successfully!');
-      loadAdminCategories();
-    }
   }
 </script>
 </body>
