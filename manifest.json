@@ -1,7 +1,7 @@
 {
   "name": "Meesho Digital Store",
   "short_name": "MeeshoStore",
-  "description": "A digital store to buy products with instant UPI payment and UTR verification.",
+  "description": "Meesho Digital Store App",
   "start_url": "/meesho-store/",
   "scope": "/meesho-store/",
   "display": "standalone",
@@ -9,14 +9,16 @@
   "theme_color": "#ff3366",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/twemoji/v2/master/assets/72x72/1f6d2.png",
+      "src": "https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://raw.githubusercontent.com/twemoji/v2/master/assets/72x72/1f6d2.png",
+      "src": "https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
