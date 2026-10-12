@@ -49,7 +49,6 @@
     </div>
   </div>
   
-  <!-- AUTH SECTION (Login / Signup) -->
   <div id="authContainer">
     <h3 id="authTitle">🔐 User Signup</h3>
     <input type="text" id="authEmail" placeholder="Enter Email or Phone">
@@ -65,19 +64,16 @@
     <span class="link-text" onclick="switchTab('admin')" style="margin-top:15px; color:#aaa;">Go to Admin Panel</span>
   </div>
 
-  <!-- STORE TAB -->
   <div id="storeTab" class="hidden">
     <h3>Available Products</h3>
     <div id="productList"></div>
   </div>
 
-  <!-- MY PURCHASES TAB -->
   <div id="purchasesTab" class="hidden">
     <h3>📦 Your Purchased History & Downloads</h3>
     <div id="buyerPurchaseList"></div>
   </div>
 
-  <!-- ADMIN PANEL TAB -->
   <div id="adminTab" class="hidden">
     <h3>🔐 Admin Panel (Default Pass: 8535)</h3>
     <div id="adminLogin">
@@ -111,15 +107,27 @@
     </div>
   </div>
 </div>
+<!-- Firebase SDK CDN -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
+  // Yahan apni Firebase credentials daalein
+  const firebaseConfig = {
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
   let adminPassword = localStorage.getItem('adminPass') || '8535';
-  let products = JSON.parse(localStorage.getItem('products')) || [];
-  let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
-  let usersList = JSON.parse(localStorage.getItem('usersList')) || [];
   let currentUser = localStorage.getItem('currentUser') || null;
   let isLoginMode = false;
 
-  // Check initial state
   if (currentUser) {
     document.getElementById('authContainer').classList.add('hidden');
     document.getElementById('menuBar').style.display = 'block';
@@ -150,40 +158,39 @@
   }
 
   function handleUserAuth() {
-    let email = document.getElementById('authEmail').value.trim();
+    let email = document.getElementById('authEmail'].value.trim().replace(/[.#$\[\]]/g, "_");
     let pass = document.getElementById('authPass').value;
     let confirmPass = document.getElementById('authConfirmPass').value;
 
     if(!email || !pass) { alert('Please fill all fields!'); return; }
 
-    if(!isLoginMode) {
-      if(pass !== confirmPass) { alert('Passwords do not match!'); return; }
-      let existing = usersList.find(u => u.email === email);
-      if(existing) { alert('User already exists! Please login.'); return; }
-      
-      usersList.push({ email, pass, date: new Date().toLocaleString() });
-      localStorage.setItem('usersList', JSON.stringify(usersList));
-      alert('Signup successful!');
-    } else {
-      let user = usersList.find(u => u.email === email && u.pass === pass);
-      if(!user) { alert('Invalid email or password!'); return; }
-    }
+    db.ref('users/' + email).once('value', (snapshot) => {
+      let userData = snapshot.val();
+      if(!isLoginMode) {
+        if(pass !== confirmPass) { alert('Passwords do not match!'); return; }
+        if(userData) { alert('User already exists! Please login.'); return; }
+        
+        db.ref('users/' + email).set({ email, pass, date: new Date().toLocaleString() });
+        alert('Signup successful!');
+      } else {
+        if(!userData || userData.pass !== pass) { alert('Invalid email or password!'); return; }
+      }
 
-    currentUser = email;
-    localStorage.setItem('currentUser', currentUser);
-    document.getElementById('authContainer').classList.add('hidden');
-    document.getElementById('menuBar').style.display = 'block';
-    switchTab('store');
+      currentUser = email;
+      localStorage.setItem('currentUser', currentUser);
+      document.getElementById('authContainer').classList.add('hidden');
+      document.getElementById('menuBar').style.display = 'block';
+      switchTab('store');
+    });
   }
 
   function forgotPassword() {
-    let email = prompt('Enter your registered email or phone:');
-    let user = usersList.find(u => u.email === email);
-    if(user) {
-      alert(`Your password is: ${user.pass}`);
-    } else {
-      alert('User not found!');
-    }
+    let email = prompt('Enter your registered email or phone:').trim().replace(/[.#$\[\]]/g, "_");
+    db.ref('users/' + email).once('value', (snapshot) => {
+      let user = snapshot.val();
+      if(user) { alert(`Your password is: ${user.pass}`); }
+      else { alert('User not found!'); }
+    });
   }
 
   function logoutUser() {
@@ -274,8 +281,8 @@
   }
 
   function saveProductData(name, price, category, fileData, fileName) {
-    products.push({ id: Date.now(), name, price, category, fileData, fileName });
-    localStorage.setItem('products', JSON.stringify(products));
+    let newProdRef = db.ref('products').push();
+    newProdRef.set({ id: newProdRef.key, name, price, category, fileData, fileName });
     alert('Product added successfully!');
     document.getElementById('pName').value = '';
     document.getElementById('pPrice').value = '';
@@ -285,80 +292,99 @@
   }
 
   function renderProducts() {
-    let list = document.getElementById('productList');
-    list.innerHTML = '';
-    if(products.length === 0) { list.innerHTML = '<p>No products available.</p>'; return; }
-    
-    products.forEach((p, idx) => {
-      list.innerHTML += `
-        <div class="product-card">
-          <h4>${p.name} (₹${p.price})</h4>
-          <p>Category: ${p.category || 'General'}</p>
-          <input type="text" id="utr_${idx}" placeholder="Enter UPI UTR Number">
-          <button onclick="buyProduct(${idx})">Buy & Verify UTR</button>
-        </div>
-      `;
+    db.ref('products').once('value', (snapshot) => {
+      let list = document.getElementById('productList');
+      list.innerHTML = '';
+      let products = snapshot.val();
+      if(!products) { list.innerHTML = '<p>No products available.</p>'; return; }
+      
+      Object.keys(products).forEach((key) => {
+        let p = products[key];
+        list.innerHTML += `
+          <div class="product-card">
+            <h4>${p.name} (₹${p.price})</h4>
+            <p>Category: ${p.category || 'General'}</p>
+            <input type="text" id="utr_${key}" placeholder="Enter UPI UTR Number">
+            <button onclick="buyProduct('${key}', '${p.name}', '${p.price}', '${p.fileData || ''}', '${p.fileName || ''}')">Buy & Verify UTR</button>
+          </div>
+        `;
+      });
     });
   }
 
-  function buyProduct(idx) {
-    let utr = document.getElementById(`utr_${idx}`).value;
+  function buyProduct(key, name, price, fileData, fileName) {
+    let utr = document.getElementById(`utr_${key}`).value;
     if(!utr) { alert('Please enter UTR number!'); return; }
     
-    let p = products[idx];
-    purchases.push({
+    let purchaseRef = db.ref('purchases').push();
+    purchaseRef.set({
       user: currentUser,
-      productName: p.name,
-      price: p.price,
+      productName: name,
+      price: price,
       utr: utr,
-      fileData: p.fileData,
-      fileName: p.fileName,
+      fileData: fileData,
+      fileName: fileName,
       date: new Date().toLocaleString()
     });
-    localStorage.setItem('purchases', JSON.stringify(purchases));
     alert('Payment verified and added to your purchases!');
-    document.getElementById(`utr_${idx}`).value = '';
+    document.getElementById(`utr_${key}`).value = '';
     switchTab('myPurchases');
   }
 
   function renderBuyerPurchases() {
-    let list = document.getElementById('buyerPurchaseList');
-    list.innerHTML = '';
-    let userPurchases = purchases.filter(item => item.user === currentUser);
-    if(userPurchases.length === 0) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
+    db.ref('purchases').once('value', (snapshot) => {
+      let list = document.getElementById('buyerPurchaseList');
+      list.innerHTML = '';
+      let purchases = snapshot.val();
+      if(!purchases) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
 
-    userPurchases.forEach(item => {
-      let downloadBtn = item.fileData ? `<a href="${item.fileData}" download="${item.fileName}"><button style="background:#28a745;">Download ${item.fileName}</button></a>` : '<p>No downloadable file attached.</p>';
-      list.innerHTML += `
-        <div class="history-item">
-          <h4>${item.productName} - ₹${item.price}</h4>
-          <p>UTR: ${item.utr} | Date: ${item.date}</p>
-          ${downloadBtn}
-        </div>
-      `;
+      let userPurchasesCount = 0;
+      Object.keys(purchases).forEach((key) => {
+        let item = purchases[key];
+        if(item.user === currentUser) {
+          userPurchasesCount++;
+          let downloadBtn = item.fileData ? `<a href="${item.fileData}" download="${item.fileName}"><button style="background:#28a745;">Download ${item.fileName}</button></a>` : '<p>No downloadable file attached.</p>';
+          list.innerHTML += `
+            <div class="history-item">
+              <h4>${item.productName} - ₹${item.price}</h4>
+              <p>UTR: ${item.utr} | Date: ${item.date}</p>
+              ${downloadBtn}
+            </div>
+          `;
+        }
+      });
+      if(userPurchasesCount === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
     });
   }
 
   function renderAdminData() {
-    let uList = document.getElementById('adminUsersList');
-    uList.innerHTML = '<h5>Registered Users:</h5>';
-    if(usersList.length === 0) { uList.innerHTML += '<p>No users registered.</p>'; }
-    else {
-      usersList.forEach(u => {
-        uList.innerHTML += `<div class="history-item"><p><b>Email/Phone:</b> ${u.email}<br><b>Joined:</b> ${u.date}</p></div>`;
+    db.ref('users').once('value', (snapshot) => {
+      let uList = document.getElementById('adminUsersList');
+      uList.innerHTML = '<h5>Registered Users:</h5>';
+      let users = snapshot.val();
+      if(!users) { uList.innerHTML += '<p>No users registered.</p>'; }
+      else {
+        Object.keys(users).forEach((key) => {
+          let u = users[key];
+          uList.innerHTML += `<div class="history-item"><p><b>Email/Phone:</b> ${u.email}<br><b>Joined:</b> ${u.date}</p></div>`;
+        });
+      }
+    });
+
+    db.ref('purchases').once('value', (snapshot) => {
+      let sList = document.getElementById('adminSalesHistory');
+      sList.innerHTML = '<h5>All Sales History:</h5>';
+      let purchases = snapshot.val();
+      if(!purchases) { sList.innerHTML += '<p>No sales recorded.</p>'; return; }
+
+      Object.keys(purchases).forEach((key) => {
+        let item = purchases[key];
+        sList.innerHTML += `
+          <div class="history-item">
+            <p><b>User:</b> ${item.user}<br><b>Product:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> ${item.utr}<br><b>Date:</b> ${item.date}</p>
+          </div>
+        `;
       });
-    }
-
-    let sList = document.getElementById('adminSalesHistory');
-    sList.innerHTML = '<h5>All Sales History:</h5>';
-    if(purchases.length === 0) { sList.innerHTML += '<p>No sales recorded.</p>'; return; }
-
-    purchases.forEach(item => {
-      sList.innerHTML += `
-        <div class="history-item">
-          <p><b>User:</b> ${item.user}<br><b>Product:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> ${item.utr}<br><b>Date:</b> ${item.date}</p>
-        </div>
-      `;
     });
   }
 </script>
