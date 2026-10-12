@@ -132,7 +132,7 @@
         <div id="adminCategoryList"></div>
       </div>
 
-      <!-- 3. Security Settings (Hidden inside collapsible menu) -->
+      <!-- 3. Security Settings -->
       <div class="admin-section">
         <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAdminSection('securityBox')">
           <h4 style="margin:0;">🔒 Security & Password Settings</h4>
@@ -185,13 +185,26 @@
 
   let adminPassword = localStorage.getItem('adminPass') || '8535';
   let currentUser = localStorage.getItem('currentUser') || null;
+  let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+  let currentTab = localStorage.getItem('currentTab') || 'auth';
   let isLoginMode = false;
 
-  if (currentUser) {
-    document.getElementById('authContainer').classList.add('hidden');
-    document.getElementById('menuBar').style.display = 'block';
-    switchTab('store');
-  }
+  window.onload = function() {
+    if (currentUser) {
+      document.getElementById('authContainer').classList.add('hidden');
+      document.getElementById('menuBar').style.display = 'block';
+    }
+    
+    if (currentTab === 'admin' && isAdminLoggedIn) {
+      document.getElementById('adminTab').classList.remove('hidden');
+      document.getElementById('adminLogin').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      loadAdminInventory();
+      loadAdminData();
+    } else {
+      switchTab(currentUser ? currentTab : 'auth');
+    }
+  };
 
   function toggleAuthMode() {
     isLoginMode = !isLoginMode;
@@ -255,6 +268,7 @@
   function logoutUser() {
     currentUser = null;
     localStorage.removeItem('currentUser');
+    localStorage.setItem('currentTab', 'auth');
     document.getElementById('menuBar').style.display = 'none';
     document.getElementById('storeTab').classList.add('hidden');
     document.getElementById('purchasesTab').classList.add('hidden');
@@ -263,6 +277,9 @@
   }
 
   function switchTab(tab) {
+    currentTab = tab;
+    localStorage.setItem('currentTab', tab);
+
     document.getElementById('authContainer').classList.add('hidden');
     document.getElementById('storeTab').classList.add('hidden');
     document.getElementById('purchasesTab').classList.add('hidden');
@@ -281,12 +298,20 @@
       renderBuyerPurchases();
     } else if(tab === 'admin') {
       document.getElementById('adminTab').classList.remove('hidden');
+      if (isAdminLoggedIn) {
+        document.getElementById('adminLogin').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        loadAdminInventory();
+        loadAdminData();
+      }
     }
   }
 
   function loginAdmin() {
     let val = document.getElementById('adminPassInput').value;
     if(val === adminPassword) {
+      isAdminLoggedIn = true;
+      localStorage.setItem('isAdminLoggedIn', 'true');
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminDashboard').classList.remove('hidden');
       loadAdminInventory();
@@ -297,6 +322,8 @@
   }
 
   function logoutAdmin() {
+    isAdminLoggedIn = false;
+    localStorage.removeItem('isAdminLoggedIn');
     document.getElementById('adminLogin').classList.remove('hidden');
     document.getElementById('adminDashboard').classList.add('hidden');
     document.getElementById('adminPassInput').value = '';
@@ -439,10 +466,8 @@
       let p = snapshot.val();
       if(!p || p.status !== 'available') { alert('Item is out of stock or sold!'); return; }
 
-      // Mark product as sold
       db.ref('products/' + key).update({ status: 'sold' });
 
-      // Save purchase record
       let purchaseRef = db.ref('purchases').push();
       purchaseRef.set({
         user: currentUser,
