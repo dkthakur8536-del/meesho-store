@@ -20,56 +20,70 @@
       margin: 0;
       padding: 15px;
     }
-    .container { max-width: 600px; margin: auto; background: rgba(0,0,0,0.7); padding: 20px; border-radius: 12px; }
+    .container { max-width: 600px; margin: auto; background: rgba(0,0,0,0.75); padding: 20px; border-radius: 12px; }
     input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; }
     button { background: #ff3366; color: white; font-weight: bold; cursor: pointer; }
     .product-card, .history-item { background: rgba(255,255,255,0.1); padding: 12px; margin: 10px 0; border-radius: 8px; }
     .hidden { display: none; }
     .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .menu-dropdown { position: relative; display: inline-block; }
-    .dropdown-content { display: none; position: absolute; right: 0; background-color: #222; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.3); z-index: 1; border-radius: 6px; }
+    .dropdown-content { display: none; position: absolute; right: 0; background-color: #222; min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.3); z-index: 1; border-radius: 6px; }
     .dropdown-content button { background: none; color: white; text-align: left; padding: 10px; margin: 0; width: 100%; }
     .dropdown-content button:hover { background: #444; }
     .menu-dropdown:hover .dropdown-content { display: block; }
+    .link-text { color: #ff3366; cursor: pointer; text-decoration: underline; text-align: center; margin: 5px 0; display: block; }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="top-bar">
     <h2>🛍️ Meesho Store</h2>
-    <div class="menu-dropdown">
+    <div class="menu-dropdown" id="menuBar" style="display:none;">
       <button style="width:auto; padding:8px 14px; font-size:18px;">⋮</button>
       <div class="dropdown-content">
         <button onclick="switchTab('store')">Store</button>
         <button onclick="switchTab('myPurchases')">My Purchases</button>
-        <button onclick="switchTab('auth')">Login / Signup</button>
+        <button onclick="logoutUser()">Logout</button>
         <button onclick="switchTab('admin')">Admin Panel</button>
       </div>
     </div>
   </div>
   
-  <div id="authTab" class="hidden">
-    <h3>👤 User Login / Signup</h3>
+  <!-- AUTH SECTION (Login / Signup) -->
+  <div id="authContainer">
+    <h3 id="authTitle">🔐 User Signup</h3>
     <input type="text" id="authEmail" placeholder="Enter Email or Phone">
     <input type="password" id="authPass" placeholder="Enter Password">
-    <button onclick="handleAuth()">Submit</button>
+    <input type="password" id="authConfirmPass" placeholder="Confirm Password">
+    <div style="display:flex; align-items:center; gap:5px;">
+      <input type="checkbox" id="userShowPass" onclick="toggleUserPassword()" style="width:20px;">
+      <label for="userShowPass">Show Passwords</label>
+    </div>
+    <button id="authBtn" onclick="handleUserAuth()">Register & Login</button>
+    <span id="authToggleText" class="link-text" onclick="toggleAuthMode()">Already have an account? Login here</span>
+    <span class="link-text" onclick="forgotPassword()">Forgot Password?</span>
+    <span class="link-text" onclick="switchTab('admin')" style="margin-top:15px; color:#aaa;">Go to Admin Panel</span>
   </div>
 
-  <div id="storeTab">
+  <!-- STORE TAB -->
+  <div id="storeTab" class="hidden">
     <h3>Available Products</h3>
     <div id="productList"></div>
   </div>
 
+  <!-- MY PURCHASES TAB -->
   <div id="purchasesTab" class="hidden">
     <h3>📦 Your Purchased History & Downloads</h3>
     <div id="buyerPurchaseList"></div>
   </div>
 
+  <!-- ADMIN PANEL TAB -->
   <div id="adminTab" class="hidden">
     <h3>🔐 Admin Panel (Default Pass: 8535)</h3>
     <div id="adminLogin">
       <input type="password" id="adminPassInput" placeholder="Enter Admin Password">
       <button onclick="loginAdmin()">Login</button>
+      <span class="link-text" onclick="switchTab('auth')">Back to User Store</span>
     </div>
     
     <div id="adminDashboard" class="hidden">
@@ -85,12 +99,13 @@
       <input type="password" id="newPass" placeholder="Enter New Password">
       <input type="password" id="confirmPass" placeholder="Confirm Password">
       <div style="display:flex; align-items:center; gap:5px;">
-        <input type="checkbox" id="showPassToggle" onclick="togglePasswordVisibility()" style="width:20px;">
+        <input type="checkbox" id="showPassToggle" onclick="toggleAdminPassword()" style="width:20px;">
         <label for="showPassToggle">Show Passwords</label>
       </div>
       <button onclick="updateAdminPassword()">Update Password</button>
 
-      <h4>Sales History</h4>
+      <h4>Registered Users & Sales History</h4>
+      <div id="adminUsersList"></div>
       <div id="adminSalesHistory"></div>
       <button onclick="logoutAdmin()">Logout Admin</button>
     </div>
@@ -100,20 +115,101 @@
   let adminPassword = localStorage.getItem('adminPass') || '8535';
   let products = JSON.parse(localStorage.getItem('products')) || [];
   let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
+  let usersList = JSON.parse(localStorage.getItem('usersList')) || [];
   let currentUser = localStorage.getItem('currentUser') || null;
+  let isLoginMode = false;
+
+  // Check initial state
+  if (currentUser) {
+    document.getElementById('authContainer').classList.add('hidden');
+    document.getElementById('menuBar').style.display = 'block';
+    switchTab('store');
+  }
+
+  function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    if(isLoginMode) {
+      document.getElementById('authTitle').innerText = '🔐 User Login';
+      document.getElementById('authBtn').innerText = 'Login';
+      document.getElementById('authConfirmPass').style.display = 'none';
+      document.getElementById('authToggleText').innerText = "Don't have an account? Signup here";
+    } else {
+      document.getElementById('authTitle').innerText = '🔐 User Signup';
+      document.getElementById('authBtn').innerText = 'Register & Login';
+      document.getElementById('authConfirmPass').style.display = 'block';
+      document.getElementById('authToggleText').innerText = "Already have an account? Login here";
+    }
+  }
+
+  function toggleUserPassword() {
+    let p1 = document.getElementById('authPass');
+    let p2 = document.getElementById('authConfirmPass');
+    let type = p1.type === 'password' ? 'text' : 'password';
+    p1.type = type;
+    p2.type = type;
+  }
+
+  function handleUserAuth() {
+    let email = document.getElementById('authEmail').value.trim();
+    let pass = document.getElementById('authPass').value;
+    let confirmPass = document.getElementById('authConfirmPass').value;
+
+    if(!email || !pass) { alert('Please fill all fields!'); return; }
+
+    if(!isLoginMode) {
+      if(pass !== confirmPass) { alert('Passwords do not match!'); return; }
+      let existing = usersList.find(u => u.email === email);
+      if(existing) { alert('User already exists! Please login.'); return; }
+      
+      usersList.push({ email, pass, date: new Date().toLocaleString() });
+      localStorage.setItem('usersList', JSON.stringify(usersList));
+      alert('Signup successful!');
+    } else {
+      let user = usersList.find(u => u.email === email && u.pass === pass);
+      if(!user) { alert('Invalid email or password!'); return; }
+    }
+
+    currentUser = email;
+    localStorage.setItem('currentUser', currentUser);
+    document.getElementById('authContainer').classList.add('hidden');
+    document.getElementById('menuBar').style.display = 'block';
+    switchTab('store');
+  }
+
+  function forgotPassword() {
+    let email = prompt('Enter your registered email or phone:');
+    let user = usersList.find(u => u.email === email);
+    if(user) {
+      alert(`Your password is: ${user.pass}`);
+    } else {
+      alert('User not found!');
+    }
+  }
+
+  function logoutUser() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    document.getElementById('menuBar').style.display = 'none';
+    document.getElementById('storeTab').classList.add('hidden');
+    document.getElementById('purchasesTab').classList.add('hidden');
+    document.getElementById('adminTab').classList.add('hidden');
+    document.getElementById('authContainer').classList.remove('hidden');
+  }
 
   function switchTab(tab) {
-    document.getElementById('authTab').classList.add('hidden');
+    document.getElementById('authContainer').classList.add('hidden');
     document.getElementById('storeTab').classList.add('hidden');
     document.getElementById('purchasesTab').classList.add('hidden');
     document.getElementById('adminTab').classList.add('hidden');
     
     if(tab === 'auth') {
-      document.getElementById('authTab').classList.remove('hidden');
+      document.getElementById('authContainer').classList.remove('hidden');
     } else if(tab === 'store') {
+      if(!currentUser) { document.getElementById('authContainer').classList.remove('hidden'); return; }
       document.getElementById('storeTab').classList.remove('hidden');
       renderProducts();
     } else if(tab === 'myPurchases') {
+      if(!currentUser) { document.getElementById('authContainer').classList.remove('hidden'); return; }
       document.getElementById('purchasesTab').classList.remove('hidden');
       renderBuyerPurchases();
     } else if(tab === 'admin') {
@@ -121,21 +217,12 @@
     }
   }
 
-  function handleAuth() {
-    let email = document.getElementById('authEmail').value;
-    if(!email) { alert('Please enter email/phone'); return; }
-    currentUser = email;
-    localStorage.setItem('currentUser', currentUser);
-    alert('Logged in successfully!');
-    switchTab('store');
-  }
-
   function loginAdmin() {
     let val = document.getElementById('adminPassInput').value;
     if(val === adminPassword) {
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminDashboard').classList.remove('hidden');
-      renderAdminSales();
+      renderAdminData();
     } else {
       alert('Wrong Password!');
     }
@@ -147,7 +234,7 @@
     document.getElementById('adminPassInput').value = '';
   }
 
-  function togglePasswordVisibility() {
+  function toggleAdminPassword() {
     let p1 = document.getElementById('newPass');
     let p2 = document.getElementById('confirmPass');
     let type = p1.type === 'password' ? 'text' : 'password';
@@ -220,7 +307,7 @@
     
     let p = products[idx];
     purchases.push({
-      user: currentUser || 'Guest',
+      user: currentUser,
       productName: p.name,
       price: p.price,
       utr: utr,
@@ -237,9 +324,10 @@
   function renderBuyerPurchases() {
     let list = document.getElementById('buyerPurchaseList');
     list.innerHTML = '';
-    if(purchases.length === 0) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
+    let userPurchases = purchases.filter(item => item.user === currentUser);
+    if(userPurchases.length === 0) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
 
-    purchases.forEach(item => {
+    userPurchases.forEach(item => {
       let downloadBtn = item.fileData ? `<a href="${item.fileData}" download="${item.fileName}"><button style="background:#28a745;">Download ${item.fileName}</button></a>` : '<p>No downloadable file attached.</p>';
       list.innerHTML += `
         <div class="history-item">
@@ -251,21 +339,28 @@
     });
   }
 
-  function renderAdminSales() {
-    let list = document.getElementById('adminSalesHistory');
-    list.innerHTML = '';
-    if(purchases.length === 0) { list.innerHTML += '<p>No sales recorded.</p>'; return; }
+  function renderAdminData() {
+    let uList = document.getElementById('adminUsersList');
+    uList.innerHTML = '<h5>Registered Users:</h5>';
+    if(usersList.length === 0) { uList.innerHTML += '<p>No users registered.</p>'; }
+    else {
+      usersList.forEach(u => {
+        uList.innerHTML += `<div class="history-item"><p><b>Email/Phone:</b> ${u.email}<br><b>Joined:</b> ${u.date}</p></div>`;
+      });
+    }
+
+    let sList = document.getElementById('adminSalesHistory');
+    sList.innerHTML = '<h5>All Sales History:</h5>';
+    if(purchases.length === 0) { sList.innerHTML += '<p>No sales recorded.</p>'; return; }
 
     purchases.forEach(item => {
-      list.innerHTML += `
+      sList.innerHTML += `
         <div class="history-item">
           <p><b>User:</b> ${item.user}<br><b>Product:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> ${item.utr}<br><b>Date:</b> ${item.date}</p>
         </div>
       `;
     });
   }
-
-  renderProducts();
 </script>
 </body>
 </html>
