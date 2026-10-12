@@ -1,16 +1,10 @@
 {
   "name": "Meesho Digital Store",
   "short_name": "MeeshoStore",
-  "description": "A standalone digital store app for managing JSON products and orders.",
-  "start_url": "/",
+  "start_url": "/meesho-store/",
+  "scope": "/meesho-store/",
   "display": "standalone",
   "background_color": "#162447",
   "theme_color": "#ff3366",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/3176/3176363.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "icons": []
 }
