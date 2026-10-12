@@ -1,6 +1,6 @@
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
+  e.waitUntil(
+    caches.use?.then((cache) => {})
+  );
 });
-self.addEventListener('fetch', (e) => {
-  e.respondWith(fetch(e.request));
-});
+self.addEventListener('fetch', (e) => {});
