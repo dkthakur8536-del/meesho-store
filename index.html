@@ -20,19 +20,24 @@
       margin: 0;
       padding: 15px;
     }
-    .container { max-width: 600px; margin: auto; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; }
-    input, select, textarea, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; }
-    button { background: #ff3366; color: white; font-weight: bold; cursor: pointer; }
-    .product-card, .history-item { background: rgba(255,255,255,0.1); padding: 12px; margin: 10px 0; border-radius: 8px; }
+    .container { max-width: 600px; margin: auto; background: rgba(0,0,0,0.85); padding: 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    input, select, textarea, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; background: rgba(255,255,255,0.1); color: white; }
+    input::placeholder, textarea::placeholder { color: #bbb; }
+    select option { background: #222; color: white; }
+    button { background: #ff3366; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    button:hover { opacity: 0.9; }
+    .product-card, .history-item, .category-card { background: rgba(255,255,255,0.08); padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); }
     .hidden { display: none; }
-    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
     .menu-dropdown { position: relative; display: inline-block; }
-    .dropdown-content { display: none; position: absolute; right: 0; background-color: #222; min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.3); z-index: 1; border-radius: 6px; }
+    .dropdown-content { display: none; position: absolute; right: 0; background-color: #222; min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 1; border-radius: 6px; border: 1px solid #444; }
     .dropdown-content button { background: none; color: white; text-align: left; padding: 10px; margin: 0; width: 100%; }
     .dropdown-content button:hover { background: #444; }
     .menu-dropdown:hover .dropdown-content { display: block; }
-    .admin-section { background: rgba(255,255,255,0.05); padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); }
-    .link-text { color: #ff3366; cursor: pointer; text-decoration: underline; text-align: center; margin: 5px 0; display: block; }
+    .admin-section { background: rgba(0,0,0,0.3); padding: 15px; margin: 12px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); }
+    .link-text { color: #ff3366; cursor: pointer; text-decoration: underline; text-align: center; margin: 8px 0; display: block; }
+    .badge { background: #28a745; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .badge-sold { background: #dc3545; }
   </style>
 </head>
 <body>
@@ -68,7 +73,13 @@
 
   <!-- STORE TAB -->
   <div id="storeTab" class="hidden">
-    <h3>Available Products</h3>
+    <h3>Available Products & Categories</h3>
+    <div style="margin-bottom:15px;">
+      <label>Filter by Category:</label>
+      <select id="categoryFilter" onchange="renderProducts()">
+        <option value="all">All Categories</option>
+      </select>
+    </div>
     <div id="productList"></div>
   </div>
 
@@ -80,42 +91,78 @@
 
   <!-- ADMIN PANEL TAB -->
   <div id="adminTab" class="hidden">
-    <h3>🔐 Admin Panel (Default Pass: 8535)</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3>🔐 Admin Panel</h3>
+      <button onclick="switchTab('store')" style="width:auto; padding:5px 10px; background:#444;">Back to Store</button>
+    </div>
+    
     <div id="adminLogin">
-      <input type="password" id="adminPassInput" placeholder="Enter Admin Password">
-      <button onclick="loginAdmin()">Login</button>
-      <span class="link-text" onclick="switchTab('auth')">Back to User Store</span>
+      <input type="password" id="adminPassInput" placeholder="Enter Admin Password (Default: 8535)">
+      <button onclick="loginAdmin()">Login Admin</button>
     </div>
     
     <div id="adminDashboard" class="hidden">
+      <!-- 1. Add Stock / Items Section -->
       <div class="admin-section">
-        <h4>Manage Products & Upload Files</h4>
-        <input type="text" id="pName" placeholder="Product Name">
+        <h4>📦 Add Stock / Items to Category</h4>
+        <input type="text" id="pCategory" placeholder="Category Name (e.g., Netflix, Notes, Software)">
+        <input type="text" id="pName" placeholder="Item Name">
         <input type="number" id="pPrice" placeholder="Price (₹)">
-        <input type="text" id="pCategory" placeholder="Category">
-        <label>Upload Digital File:</label>
-        <input type="file" id="pFile">
-        <button onclick="addProduct()">Add Product</button>
-      </div>
+        
+        <label>Select Format Type:</label>
+        <select id="pType" onchange="toggleFormatInput()">
+          <option value="text">Text / Account Details Format</option>
+          <option value="file">File Upload</option>
+        </select>
 
-      <div class="admin-section">
-        <h4>Change Admin Password</h4>
-        <input type="password" id="newPass" placeholder="Enter New Password">
-        <input type="password" id="confirmPass" placeholder="Confirm Password">
-        <div style="display:flex; align-items:center; gap:5px;">
-          <input type="checkbox" id="showPassToggle" onclick="toggleAdminPassword()" style="width:20px;">
-          <label for="showPassToggle">Show Passwords</label>
+        <div id="textInputDiv">
+          <textarea id="pTextContent" placeholder="Enter account details, license keys or text content here..."></textarea>
         </div>
-        <button onclick="updateAdminPassword()">Update Password</button>
+        <div id="fileInputDiv" class="hidden">
+          <label>Upload File:</label>
+          <input type="file" id="pFile">
+        </div>
+
+        <button onclick="addProduct()">Add Item to Stock</button>
       </div>
 
+      <!-- 2. Manage Categories & Inventory Status -->
       <div class="admin-section">
-        <h4>Registered Users & Sales History</h4>
-        <div id="adminUsersList"></div>
-        <div id="adminSalesHistory"></div>
+        <h4>📊 Categories & Stock Inventory</h4>
+        <div id="adminCategoryList"></div>
       </div>
 
-      <button onclick="logoutAdmin()" style="background:#444; margin-top:15px;">Logout Admin</button>
+      <!-- 3. Security Settings (Hidden inside collapsible menu) -->
+      <div class="admin-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAdminSection('securityBox')">
+          <h4 style="margin:0;">🔒 Security & Password Settings</h4>
+          <span>▼</span>
+        </div>
+        <div id="securityBox" class="hidden" style="margin-top:10px;">
+          <input type="password" id="newPass" placeholder="Enter New Admin Password">
+          <input type="password" id="confirmPass" placeholder="Confirm New Password">
+          <div style="display:flex; align-items:center; gap:5px;">
+            <input type="checkbox" id="showPassToggle" onclick="toggleAdminPassword()" style="width:20px;">
+            <label for="showPassToggle">Show Passwords</label>
+          </div>
+          <button onclick="updateAdminPassword()">Update Admin Password</button>
+        </div>
+      </div>
+
+      <!-- 4. Users & Sales History -->
+      <div class="admin-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAdminSection('salesBox')">
+          <h4 style="margin:0;">📜 Users & Sales Records</h4>
+          <span>▼</span>
+        </div>
+        <div id="salesBox" class="hidden" style="margin-top:10px;">
+          <div id="adminUsersList"></div>
+          <hr style="border-color:rgba(255,255,255,0.2);">
+          <div id="adminSalesHistory"></div>
+        </div>
+      </div>
+
+      <button onclick="logoutAdmin()" style="background:#d9534f; margin-top:15px;">Logout Admin</button>
     </div>
   </div>
 </div>
@@ -226,6 +273,7 @@
     } else if(tab === 'store') {
       if(!currentUser) { document.getElementById('authContainer').classList.remove('hidden'); return; }
       document.getElementById('storeTab').classList.remove('hidden');
+      loadCategoriesDropdown();
       renderProducts();
     } else if(tab === 'myPurchases') {
       if(!currentUser) { document.getElementById('authContainer').classList.remove('hidden'); return; }
@@ -241,7 +289,8 @@
     if(val === adminPassword) {
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminDashboard').classList.remove('hidden');
-      renderAdminData();
+      loadAdminInventory();
+      loadAdminData();
     } else {
       alert('Wrong Password!');
     }
@@ -251,6 +300,22 @@
     document.getElementById('adminLogin').classList.remove('hidden');
     document.getElementById('adminDashboard').classList.add('hidden');
     document.getElementById('adminPassInput').value = '';
+  }
+
+  function toggleAdminSection(boxId) {
+    let box = document.getElementById(boxId);
+    box.classList.toggle('hidden');
+  }
+
+  function toggleFormatInput() {
+    let type = document.getElementById('pType').value;
+    if(type === 'file') {
+      document.getElementById('fileInputDiv').classList.remove('hidden');
+      document.getElementById('textInputDiv').classList.add('hidden');
+    } else {
+      document.getElementById('fileInputDiv').classList.add('hidden');
+      document.getElementById('textInputDiv').classList.remove('hidden');
+    }
   }
 
   function toggleAdminPassword() {
@@ -274,73 +339,126 @@
   }
 
   function addProduct() {
-    let name = document.getElementById('pName').value;
-    let price = document.getElementById('pPrice').value;
-    let category = document.getElementById('pCategory').value;
-    let fileInput = document.getElementById('pFile');
+    let category = document.getElementById('pCategory').value.trim() || 'General';
+    let name = document.getElementById('pName').value.trim();
+    let price = document.getElementById('pPrice').value.trim();
+    let type = document.getElementById('pType').value;
 
-    if(!name || !price) { alert('Fill product details!'); return; }
+    if(!name || !price) { alert('Please enter item name and price!'); return; }
 
-    if(fileInput.files.length > 0) {
+    if(type === 'file') {
+      let fileInput = document.getElementById('pFile');
+      if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
       let reader = new FileReader();
       reader.onload = function(e) {
-        saveProductData(name, price, category, e.target.result, fileInput.files[0].name);
+        saveProductToDB(category, name, price, type, e.target.result, fileInput.files[0].name);
       };
       reader.readAsDataURL(fileInput.files[0]);
     } else {
-      saveProductData(name, price, category, '', '');
+      let textContent = document.getElementById('pTextContent').value.trim();
+      if(!textContent) { alert('Please enter text content or account info!'); return; }
+      saveProductToDB(category, name, price, type, textContent, 'text_format');
     }
   }
 
-  function saveProductData(name, price, category, fileData, fileName) {
-    let newProdRef = db.ref('products').push();
-    newProdRef.set({ id: newProdRef.key, name, price, category, fileData, fileName });
-    alert('Product added successfully!');
+  function saveProductToDB(category, name, price, type, content, fileName) {
+    let newRef = db.ref('products').push();
+    newRef.set({ 
+      id: newRef.key, 
+      category, 
+      name, 
+      price, 
+      type, 
+      content, 
+      fileName, 
+      status: 'available',
+      date: new Date().toLocaleString() 
+    });
+    alert('Item added successfully to stock!');
     document.getElementById('pName').value = '';
     document.getElementById('pPrice').value = '';
-    document.getElementById('pCategory').value = '';
     document.getElementById('pFile').value = '';
-    renderProducts();
+    document.getElementById('pTextContent').value = '';
+    loadAdminInventory();
+  }
+
+  function loadCategoriesDropdown() {
+    db.ref('products').once('value', (snapshot) => {
+      let filter = document.getElementById('categoryFilter');
+      let currentVal = filter.value;
+      filter.innerHTML = '<option value="all">All Categories</option>';
+      let categories = new Set();
+      
+      let products = snapshot.val();
+      if(products) {
+        Object.keys(products).forEach(k => {
+          if(products[k].category) categories.add(products[k].category);
+        });
+      }
+      categories.forEach(cat => {
+        filter.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+      filter.value = currentVal;
+    });
   }
 
   function renderProducts() {
+    let selectedCat = document.getElementById('categoryFilter').value;
     db.ref('products').once('value', (snapshot) => {
       let list = document.getElementById('productList');
       list.innerHTML = '';
       let products = snapshot.val();
       if(!products) { list.innerHTML = '<p>No products available.</p>'; return; }
       
+      let count = 0;
       Object.keys(products).forEach((key) => {
         let p = products[key];
-        list.innerHTML += `
-          <div class="product-card">
-            <h4>${p.name} (₹${p.price})</h4>
-            <p>Category: ${p.category || 'General'}</p>
-            <input type="text" id="utr_${key}" placeholder="Enter UPI UTR Number">
-            <button onclick="buyProduct('${key}', '${p.name}', '${p.price}', '${p.fileData || ''}', '${p.fileName || ''}')">Buy & Verify UTR</button>
-          </div>
-        `;
+        if(selectedCat === 'all' || p.category === selectedCat) {
+          if(p.status === 'available') {
+            count++;
+            list.innerHTML += `
+              <div class="product-card">
+                <h4>${p.name} (₹${p.price})</h4>
+                <p><b>Category:</b> ${p.category} | <span class="badge">In Stock</span></p>
+                <input type="text" id="utr_${key}" placeholder="Enter UPI UTR Number">
+                <button onclick="buyProduct('${key}', '${p.name}', '${p.price}')">Buy & Verify UTR</button>
+              </div>
+            `;
+          }
+        }
       });
+      if(count === 0) { list.innerHTML = '<p>No items available in this category.</p>'; }
     });
   }
 
-  function buyProduct(key, name, price, fileData, fileName) {
-    let utr = document.getElementById(`utr_${key}`).value;
+  function buyProduct(key, name, price) {
+    let utr = document.getElementById(`utr_${key}`).value.trim();
     if(!utr) { alert('Please enter UTR number!'); return; }
     
-    let purchaseRef = db.ref('purchases').push();
-    purchaseRef.set({
-      user: currentUser,
-      productName: name,
-      price: price,
-      utr: utr,
-      fileData: fileData,
-      fileName: fileName,
-      date: new Date().toLocaleString()
+    db.ref('products/' + key).once('value', (snapshot) => {
+      let p = snapshot.val();
+      if(!p || p.status !== 'available') { alert('Item is out of stock or sold!'); return; }
+
+      // Mark product as sold
+      db.ref('products/' + key).update({ status: 'sold' });
+
+      // Save purchase record
+      let purchaseRef = db.ref('purchases').push();
+      purchaseRef.set({
+        user: currentUser,
+        productName: name,
+        price: price,
+        utr: utr,
+        type: p.type,
+        content: p.content,
+        fileName: p.fileName,
+        date: new Date().toLocaleString()
+      });
+
+      alert('Payment verified! Item unlocked and added to your purchases.');
+      document.getElementById(`utr_${key}`).value = '';
+      switchTab('myPurchases');
     });
-    alert('Payment verified and added to your purchases!');
-    document.getElementById(`utr_${key}`).value = '';
-    switchTab('myPurchases');
   }
 
   function renderBuyerPurchases() {
@@ -350,26 +468,81 @@
       let purchases = snapshot.val();
       if(!purchases) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
 
-      let userPurchasesCount = 0;
+      let count = 0;
       Object.keys(purchases).forEach((key) => {
         let item = purchases[key];
         if(item.user === currentUser) {
-          userPurchasesCount++;
-          let downloadBtn = item.fileData ? `<a href="${item.fileData}" download="${item.fileName}"><button style="background:#28a745;">Download ${item.fileName}</button></a>` : '<p>No downloadable file attached.</p>';
+          count++;
+          let deliveryContent = '';
+          if(item.type === 'file') {
+            deliveryContent = `<a href="${item.content}" download="${item.fileName}"><button style="background:#28a745; margin-top:8px;">Download ${item.fileName}</button></a>`;
+          } else {
+            deliveryContent = `<div style="background:rgba(0,0,0,0.5); padding:10px; border-radius:6px; margin-top:8px;"><b>Account / Text Details:</b><pre style="white-space:pre-wrap; margin:5px 0 0 0; color:#0ff;">${item.content}</pre></div>`;
+          }
+
           list.innerHTML += `
             <div class="history-item">
               <h4>${item.productName} - ₹${item.price}</h4>
-              <p>UTR: ${item.utr} | Date: ${item.date}</p>
-              ${downloadBtn}
+              <p style="margin:4px 0; font-size:13px; color:#ccc;">UTR: ${item.utr} | Date: ${item.date}</p>
+              ${deliveryContent}
             </div>
           `;
         }
       });
-      if(userPurchasesCount === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
+      if(count === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
     });
   }
 
-  function renderAdminData() {
+  function loadAdminInventory() {
+    db.ref('products').once('value', (snapshot) => {
+      let cList = document.getElementById('adminCategoryList');
+      cList.innerHTML = '';
+      let products = snapshot.val();
+      if(!products) { cList.innerHTML = '<p>No stock added yet.</p>'; return; }
+
+      let categories = {};
+      Object.keys(products).forEach((key) => {
+        let p = products[key];
+        let cat = p.category || 'General';
+        if(!categories[cat]) categories[cat] = { available: 0, sold: 0, items: [] };
+        categories[cat].items.push({ id: key, ...p });
+        if(p.status === 'sold') categories[cat].sold++;
+        else categories[cat].available++;
+      });
+
+      Object.keys(categories).forEach(cat => {
+        let data = categories[cat];
+        let itemsHtml = '';
+        data.items.forEach(item => {
+          let badge = item.status === 'sold' ? '<span class="badge badge-sold">Sold</span>' : '<span class="badge">Available</span>';
+          itemsHtml += `
+            <div style="background:rgba(255,255,255,0.05); padding:8px; margin:5px 0; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+              <div>${item.name} (₹${item.price}) ${badge}</div>
+              <button onclick="deleteProduct('${item.id}')" style="width:auto; background:#d9534f; padding:4px 8px; margin:0; font-size:12px;">Delete</button>
+            </div>
+          `;
+        });
+
+        cList.innerHTML += `
+          <div class="category-card">
+            <h4 style="margin:0 0 5px 0; color:#ff3366;">📁 ${cat}</h4>
+            <p style="margin:0 0 8px 0; font-size:13px;">Remaining Stock: <b>${data.available}</b> | Sold: <b>${data.sold}</b></p>
+            ${itemsHtml}
+          </div>
+        `;
+      });
+    });
+  }
+
+  function deleteProduct(key) {
+    if(confirm('Are you sure you want to delete this item?')) {
+      db.ref('products/' + key).remove();
+      alert('Item deleted successfully!');
+      loadAdminInventory();
+    }
+  }
+
+  function loadAdminData() {
     db.ref('users').once('value', (snapshot) => {
       let uList = document.getElementById('adminUsersList');
       uList.innerHTML = '<h5>Registered Users:</h5>';
@@ -378,22 +551,22 @@
       else {
         Object.keys(users).forEach((key) => {
           let u = users[key];
-          uList.innerHTML += `<div class="history-item"><p><b>Email/Phone:</b> ${u.email}<br><b>Joined:</b> ${u.date}</p></div>`;
+          uList.innerHTML += `<div style="font-size:13px; margin:4px 0;">👤 ${u.email} (Joined: ${u.date})</div>`;
         });
       }
     });
 
     db.ref('purchases').once('value', (snapshot) => {
       let sList = document.getElementById('adminSalesHistory');
-      sList.innerHTML = '<h5>All Sales History:</h5>';
+      sList.innerHTML = '<h5>Sales History:</h5>';
       let purchases = snapshot.val();
       if(!purchases) { sList.innerHTML += '<p>No sales recorded.</p>'; return; }
 
       Object.keys(purchases).forEach((key) => {
         let item = purchases[key];
         sList.innerHTML += `
-          <div class="history-item">
-            <p><b>User:</b> ${item.user}<br><b>Product:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> ${item.utr}<br><b>Date:</b> ${item.date}</p>
+          <div style="background:rgba(0,0,0,0.3); padding:8px; margin:5px 0; border-radius:4px; font-size:13px;">
+            <b>Buyer:</b> ${item.user}<br><b>Item:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> ${item.utr}<br><b>Date:</b> ${item.date}
           </div>
         `;
       });
