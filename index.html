@@ -128,6 +128,7 @@
       width: auto;
       display: inline-block;
     }
+    .strength-meter { font-size: 12px; margin-top: -4px; margin-bottom: 8px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -149,11 +150,16 @@
   <div id="authContainer">
     <h3 id="authTitle" style="text-align:center; color:#fbbf24; font-size:20px;">🔐 User Signup</h3>
     <input type="text" id="authEmail" placeholder="Enter Email or Phone">
-    <input type="password" id="authPass" placeholder="Enter Password">
+    <input type="password" id="authPass" placeholder="Enter Password (Min 8 chars)" oninput="checkPasswordStrength()">
+    <div id="passStrength" class="strength-meter"></div>
     <input type="password" id="authConfirmPass" placeholder="Confirm Password">
-    <div style="display:flex; align-items:center; gap:8px; margin:12px 0;">
+    <div style="display:flex; align-items:center; gap:8px; margin:8px 0;">
       <input type="checkbox" id="userShowPass" onclick="toggleUserPassword()" style="width:18px; height:18px;">
       <label for="userShowPass" style="font-size:13px; color:#cbd5e1;">Show Passwords</label>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; margin:8px 0;">
+      <input type="checkbox" id="keepSignedIn" style="width:18px; height:18px;" checked>
+      <label for="keepSignedIn" style="font-size:13px; color:#cbd5e1;">Keep me signed in for 10 days</label>
     </div>
     <button id="authBtn" onclick="handleUserAuth()">Register & Start Shopping</button>
     <span id="authToggleText" class="link-text" onclick="toggleAuthMode()">Already have an account? Login here</span>
@@ -199,17 +205,17 @@
         <input type="text" id="pName" placeholder="Item Title">
         <input type="number" id="pPrice" placeholder="Price (₹)">
         
-        <label style="font-size:13px; color:#94a3b8;">Input Format (Auto-converted to Clean Text):</label>
+        <label style="font-size:13px; color:#cbd5e1;">Input Format:</label>
         <select id="pType" onchange="toggleFormatInput()">
           <option value="text">Paste Text / JSON Format</option>
           <option value="file">Upload JSON / File</option>
         </select>
 
         <div id="textInputDiv">
-          <textarea id="pTextContent" placeholder='Paste your JSON or account text here (e.g., {"mobile": "9582299052", ...})' style="height:100px; font-family:monospace;"></textarea>
+          <textarea id="pTextContent" placeholder='Paste your JSON or account text here...' style="height:100px; font-family:monospace;"></textarea>
         </div>
         <div id="fileInputDiv" class="hidden">
-          <label style="font-size:13px; color:#94a3b8;">Upload File (.json, .txt):</label>
+          <label style="font-size:13px; color:#cbd5e1;">Upload File (.json, .txt):</label>
           <input type="file" id="pFile">
         </div>
 
@@ -287,6 +293,16 @@
   const merchantUpiId = "9870815480@slc";
 
   window.onload = function() {
+    // Check 10 days session expiry
+    let loginTime = localStorage.getItem('loginTime');
+    if (loginTime) {
+      let daysPassed = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60 * 24);
+      if (daysPassed > 10) {
+        logoutUser();
+        return;
+      }
+    }
+
     if (currentUser) {
       document.getElementById('authContainer').classList.add('hidden');
       document.getElementById('menuBar').style.display = 'block';
@@ -310,11 +326,13 @@
       document.getElementById('authTitle').innerText = '🔐 User Login';
       document.getElementById('authBtn').innerText = 'Login to Store';
       document.getElementById('authConfirmPass').style.display = 'none';
+      document.getElementById('passStrength').style.display = 'none';
       document.getElementById('authToggleText').innerText = "Don't have an account? Signup here";
     } else {
       document.getElementById('authTitle').innerText = '🔐 User Signup';
       document.getElementById('authBtn').innerText = 'Register & Start Shopping';
       document.getElementById('authConfirmPass').style.display = 'block';
+      document.getElementById('passStrength').style.display = 'block';
       document.getElementById('authToggleText').innerText = "Already have an account? Login here";
     }
   }
@@ -327,6 +345,21 @@
     p2.type = type;
   }
 
+  function checkPasswordStrength() {
+    let pass = document.getElementById('authPass').value;
+    let strengthText = document.getElementById('passStrength');
+    if(pass.length < 8) {
+      strengthText.innerText = "❌ Password must be at least 8 characters";
+      strengthText.style.color = "#ef4444";
+    } else if(/[A-Z]/.test(pass) && /[0-9]/.test(pass) && /[^A-Za-z0-9]/.test(pass)) {
+      strengthText.innerText = "✅ Strong Password";
+      strengthText.style.color = "#10b981";
+    } else {
+      strengthText.innerText = "⚠️ Medium Password (add numbers/symbols)";
+      strengthText.style.color = "#f59e0b";
+    }
+  }
+
   function handleUserAuth() {
     let email = document.getElementById('authEmail').value.trim().replace(/[.#$\[\]]/g, "_");
     let pass = document.getElementById('authPass').value;
@@ -334,12 +367,15 @@
 
     if(!email || !pass) { alert('Please fill all fields!'); return; }
 
+    if(!isLoginMode) {
+      if(pass.length < 8) { alert('Password must be at least 8 characters long!'); return; }
+      if(pass !== confirmPass) { alert('Passwords do not match!'); return; }
+    }
+
     db.ref('users/' + email).once('value', (snapshot) => {
       let userData = snapshot.val();
       if(!isLoginMode) {
-        if(pass !== confirmPass) { alert('Passwords do not match!'); return; }
         if(userData) { alert('User already exists! Please login.'); return; }
-        
         db.ref('users/' + email).set({ email, pass, date: new Date().toLocaleString() });
         alert('Signup successful!');
       } else {
@@ -348,6 +384,12 @@
 
       currentUser = email;
       localStorage.setItem('currentUser', currentUser);
+      if(document.getElementById('keepSignedIn').checked) {
+        localStorage.setItem('loginTime', Date.now().toString());
+      } else {
+        localStorage.removeItem('loginTime');
+      }
+
       document.getElementById('authContainer').classList.add('hidden');
       document.getElementById('menuBar').style.display = 'block';
       switchTab('store');
@@ -366,6 +408,7 @@
   function logoutUser() {
     currentUser = null;
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('loginTime');
     localStorage.setItem('currentTab', 'auth');
     document.getElementById('menuBar').style.display = 'none';
     document.getElementById('storeTab').classList.add('hidden');
@@ -466,104 +509,6 @@
   }
 </script>
 <script>
-  function addProduct() {
-    let category = document.getElementById('pCategory').value.trim() || 'General';
-    let name = document.getElementById('pName').value.trim();
-    let price = document.getElementById('pPrice').value.trim();
-    let type = document.getElementById('pType').value;
-
-    if(!name || !price) { alert('Please enter item title and price!'); return; }
-
-    if(type === 'file') {
-      let fileInput = document.getElementById('pFile');
-      if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
-      let file = fileInput.files[0];
-      let reader = new FileReader();
-      reader.onload = function(e) {
-        let content = e.target.result;
-        if(content.startsWith('data:')) {
-          try {
-            let base64Data = content.split(',')[1];
-            content = atob(base64Data);
-          } catch(err) {}
-        }
-        saveProductToDB(category, name, price, content);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      let textContent = document.getElementById('pTextContent').value.trim();
-      if(!textContent) { alert('Please enter text or JSON content!'); return; }
-      saveProductToDB(category, name, price, textContent);
-    }
-  }
-
-  function toggleQuickFormat(category) {
-    let type = document.getElementById(`quick_type_${category}`).value;
-    if(type === 'file') {
-      document.getElementById(`quick_file_div_${category}`).classList.remove('hidden');
-      document.getElementById(`quick_text_div_${category}`).classList.add('hidden');
-    } else {
-      document.getElementById(`quick_file_div_${category}`).classList.add('hidden');
-      document.getElementById(`quick_text_div_${category}`).classList.remove('hidden');
-    }
-  }
-
-  function quickAddProduct(category) {
-    let name = document.getElementById(`quick_name_${category}`).value.trim();
-    let price = document.getElementById(`quick_price_${category}`).value.trim();
-    let type = document.getElementById(`quick_type_${category}`).value;
-
-    if(!name || !price) { alert('Fill item name and price!'); return; }
-
-    if(type === 'file') {
-      let fileInput = document.getElementById(`quick_file_${category}`);
-      if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
-      let reader = new FileReader();
-      reader.onload = function(e) {
-        let content = e.target.result;
-        if(content.startsWith('data:')) {
-          try {
-            let base64Data = content.split(',')[1];
-            content = atob(base64Data);
-          } catch(err) {}
-        }
-        saveProductToDB(category, name, price, content);
-      };
-      reader.readAsDataURL(fileInput.files[0]);
-    } else {
-      let content = document.getElementById(`quick_text_${category}`).value.trim();
-      if(!content) { alert('Please enter text or JSON content!'); return; }
-      saveProductToDB(category, name, price, content);
-      document.getElementById(`quick_name_${category}`).value = '';
-      document.getElementById(`quick_price_${category}`).value = '';
-      document.getElementById(`quick_text_${category}`).value = '';
-    }
-  }
-
-  function saveProductToDB(category, name, price, content) {
-    let newRef = db.ref('products').push();
-    newRef.set({ 
-      id: newRef.key, 
-      category, 
-      name, 
-      price, 
-      content, 
-      status: 'available',
-      date: new Date().toLocaleString() 
-    });
-    alert('Item published successfully to store!');
-    loadAdminInventory();
-  }
-
-  function updateItemPrice(key, currentPrice) {
-    let newPrice = prompt('Enter new price (₹):', currentPrice);
-    if(newPrice && !isNaN(newPrice)) {
-      db.ref('products/' + key).update({ price: newPrice });
-      alert('Price updated successfully!');
-      loadAdminInventory();
-    }
-  }
-
   function loadCategoriesDropdown() {
     db.ref('products').once('value', (snapshot) => {
       let filter = document.getElementById('categoryFilter');
@@ -657,6 +602,179 @@
     });
   }
 
+  function renderBuyerPurchases() {
+    db.ref('purchases').once('value', (snapshot) => {
+      let list = document.getElementById('buyerPurchaseList');
+      list.innerHTML = '';
+      let purchases = snapshot.val();
+      if(!purchases) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
+
+      let count = 0;
+      Object.keys(purchases).forEach((key) => {
+        let item = purchases[key];
+        if(item.user === currentUser) {
+          count++;
+          let statusBadge = '';
+          let deliveryContent = '';
+
+          if(item.status === 'pending') {
+            statusBadge = '<span class="badge badge-pending">Verification Pending</span>';
+            deliveryContent = '<p style="font-size:13px; color:#fbbf24; margin-top:8px;">⏳ Admin is verifying your UTR payment. Your delivery content will appear here once approved.</p>';
+          } else if(item.status === 'approved') {
+            statusBadge = '<span class="badge">Approved & Unlocked</span>';
+            let safeContent = item.content.replace(/"/g, '&quot;');
+            deliveryContent = `
+              <div style="background:rgba(0,0,0,0.6); padding:12px; border-radius:8px; margin-top:10px; border:1px solid rgba(56, 189, 248, 0.3);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <b style="font-size:12px; color:#38bdf8;">Digital Delivery (Clean Text / JSON):</b>
+                  <button onclick="copyToClipboard('${safeContent}')" class="copy-btn">📋 One-Click Copy</button>
+                </div>
+                <pre id="content_${item.id}" style="white-space:pre-wrap; word-break:break-all; margin:0; color:#38bdf8; font-family:monospace; font-size:12px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">${item.content}</pre>
+              </div>
+            `;
+          }
+
+          list.innerHTML += `
+            <div class="history-item">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 style="margin:0; color:#fbbf24;">${item.productName} - ₹${item.price}</h4>
+                ${statusBadge}
+              </div>
+              <p style="margin:6px 0; font-size:13px; color:#94a3b8;">UTR: ${item.utr} | Date: ${item.date}</p>
+              ${deliveryContent}
+            </div>
+          `;
+        }
+      });
+      if(count === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
+    });
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Copied to clipboard successfully!');
+    }).catch(err => {
+      alert('Failed to copy text!');
+    });
+  }
+</script>
+<script>
+  function addProduct() {
+    let category = document.getElementById('pCategory').value.trim() || 'General';
+    let name = document.getElementById('pName').value.trim();
+    let price = document.getElementById('pPrice').value.trim();
+    let type = document.getElementById('pType').value;
+
+    if(!name || !price) { alert('Please enter item title and price!'); return; }
+
+    if(type === 'file') {
+      let fileInput = document.getElementById('pFile');
+      if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
+      let file = fileInput.files[0];
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        let content = e.target.result; // Read as plain text/json string correctly
+        saveProductToDB(category, name, price, content);
+      };
+      reader.readAsText(file);
+    } else {
+      let textContent = document.getElementById('pTextContent').value.trim();
+      if(!textContent) { alert('Please enter text or JSON content!'); return; }
+      saveProductToDB(category, name, price, textContent);
+    }
+  }
+
+  function toggleQuickFormat(category) {
+    let type = document.getElementById(`quick_type_${category}`).value;
+    if(type === 'file') {
+      document.getElementById(`quick_file_div_${category}`).classList.remove('hidden');
+      document.getElementById(`quick_text_div_${category}`).classList.add('hidden');
+    } else {
+      document.getElementById(`quick_file_div_${category}`).classList.add('hidden');
+      document.getElementById(`quick_text_div_${category}`).classList.remove('hidden');
+    }
+  }
+
+  function quickAddProduct(category) {
+    let name = document.getElementById(`quick_name_${category}`).value.trim();
+    let price = document.getElementById(`quick_price_${category}`).value.trim();
+    let type = document.getElementById(`quick_type_${category}`).value;
+
+    if(!name || !price) { alert('Fill item name and price!'); return; }
+
+    if(type === 'file') {
+      let fileInput = document.getElementById(`quick_file_${category}`);
+      if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
+      let file = fileInput.files[0];
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        let content = e.target.result;
+        saveProductToDB(category, name, price, content);
+      };
+      reader.readAsText(file);
+    } else {
+      let content = document.getElementById(`quick_text_${category}`).value.trim();
+      if(!content) { alert('Please enter text or JSON content!'); return; }
+      saveProductToDB(category, name, price, content);
+      document.getElementById(`quick_name_${category}`).value = '';
+      document.getElementById(`quick_price_${category}`).value = '';
+      document.getElementById(`quick_text_${category}`).value = '';
+    }
+  }
+
+  function bulkAddStock(category) {
+    let price = document.getElementById(`bulk_price_${category}`).value.trim();
+    let bulkData = document.getElementById(`bulk_data_${category}`).value.trim();
+
+    if(!price || !bulkData) { alert('Please fill price and bulk items data!'); return; }
+
+    let lines = bulkData.split('\n').filter(line => line.trim() !== '');
+    if(lines.length === 0) { alert('No valid items found in bulk text!'); return; }
+
+    lines.forEach((line, index) => {
+      let itemName = `${category} Item #${index + 1}`;
+      let newRef = db.ref('products').push();
+      newRef.set({
+        id: newRef.key,
+        category,
+        name: itemName,
+        price,
+        content: line.trim(),
+        status: 'available',
+        date: new Date().toLocaleString()
+      });
+    });
+
+    alert(`Successfully added ${lines.length} items in bulk to [${category}]!`);
+    document.getElementById(`bulk_price_${category}`).value = '';
+    document.getElementById(`bulk_data_${category}`).value = '';
+    loadAdminInventory();
+  }
+
+  function saveProductToDB(category, name, price, content) {
+    let newRef = db.ref('products').push();
+    newRef.set({ 
+      id: newRef.key, 
+      category, 
+      name, 
+      price, 
+      content, 
+      status: 'available',
+      date: new Date().toLocaleString() 
+    });
+    alert('Item published successfully to store!');
+    loadAdminInventory();
+  }
+
+  function updateItemPrice(key, currentPrice) {
+    let newPrice = prompt('Enter new price (₹):', currentPrice);
+    if(newPrice && !isNaN(newPrice)) {
+      db.ref('products/' + key).update({ price: newPrice });
+      alert('Price updated successfully!');
+      loadAdminInventory();
+    }
+  }
+
   function loadPendingOrders() {
     db.ref('purchases').once('value', (snapshot) => {
       let pList = document.getElementById('adminPendingOrders');
@@ -703,62 +821,6 @@
       loadPendingOrders();
       loadAdminInventory();
     }
-  }
-
-  function renderBuyerPurchases() {
-    db.ref('purchases').once('value', (snapshot) => {
-      let list = document.getElementById('buyerPurchaseList');
-      list.innerHTML = '';
-      let purchases = snapshot.val();
-      if(!purchases) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
-
-      let count = 0;
-      Object.keys(purchases).forEach((key) => {
-        let item = purchases[key];
-        if(item.user === currentUser) {
-          count++;
-          let statusBadge = '';
-          let deliveryContent = '';
-
-          if(item.status === 'pending') {
-            statusBadge = '<span class="badge badge-pending">Verification Pending</span>';
-            deliveryContent = '<p style="font-size:13px; color:#fbbf24; margin-top:8px;">⏳ Admin is verifying your UTR payment. Your delivery content will appear here once approved.</p>';
-          } else if(item.status === 'approved') {
-            statusBadge = '<span class="badge">Approved & Unlocked</span>';
-            let safeContent = item.content.replace(/"/g, '&quot;');
-            deliveryContent = `
-              <div style="background:rgba(0,0,0,0.6); padding:12px; border-radius:8px; margin-top:10px; border:1px solid rgba(56, 189, 248, 0.3);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                  <b style="font-size:12px; color:#38bdf8;">Digital Delivery (JSON / Text):</b>
-                  <button onclick="copyToClipboard('${safeContent}')" class="copy-btn">📋 One-Click Copy</button>
-                </div>
-                <pre id="content_${item.id}" style="white-space:pre-wrap; word-break:break-all; margin:0; color:#38bdf8; font-family:monospace; font-size:12px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">${item.content}</pre>
-              </div>
-            `;
-          }
-
-          list.innerHTML += `
-            <div class="history-item">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h4 style="margin:0; color:#fbbf24;">${item.productName} - ₹${item.price}</h4>
-                ${statusBadge}
-              </div>
-              <p style="margin:6px 0; font-size:13px; color:#94a3b8;">UTR: ${item.utr} | Date: ${item.date}</p>
-              ${deliveryContent}
-            </div>
-          `;
-        }
-      });
-      if(count === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
-    });
-  }
-
-  function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Copied to clipboard successfully!');
-    }).catch(err => {
-      alert('Failed to copy text!');
-    });
   }
 
   function loadAdminInventory() {
@@ -822,6 +884,13 @@
               </div>
 
               <button onclick="quickAddProduct('${cat}')" style="font-size:13px; padding:8px; margin:8px 0 0 0; background:#059669;">Publish to ${cat}</button>
+            </div>
+
+            <div style="background:rgba(0,0,0,0.3); padding:12px; margin-top:12px; border-radius:8px; border:1px dashed rgba(56, 189, 248, 0.3);">
+              <p style="margin:0 0 8px 0; font-size:13px; color:#38bdf8; font-weight:bold;">⚡ Bulk Add Multiple Items to [${cat}]</p>
+              <input type="number" id="bulk_price_${cat}" placeholder="Price per Item (₹)" style="margin:4px 0; font-size:13px; padding:8px;">
+              <textarea id="bulk_data_${cat}" placeholder="Paste multiple items here (Each line will be saved as a separate item)..." style="margin:4px 0; font-size:13px; padding:8px; height:80px; font-family:monospace;"></textarea>
+              <button onclick="bulkAddStock('${cat}')" style="font-size:13px; padding:8px; margin:8px 0 0 0; background:#0284c7;">Upload Bulk Stock</button>
             </div>
           </div>
         `;
