@@ -185,6 +185,27 @@
       </select>
     </div>
     <div id="productList"></div>
+    
+    <!-- CHECKOUT VIEW (Initially Hidden) -->
+    <div id="checkoutView" class="hidden product-card" style="border: 2px solid #ff3366;">
+      <button onclick="cancelCheckout()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:10px;">⬅ Back to Catalog</button>
+      <h3 id="checkoutTitle" style="color:#fbbf24; margin-top:0;">Checkout</h3>
+      <p id="checkoutDetails" style="font-size:14px; color:#cbd5e1;"></p>
+      
+      <div class="payment-box">
+        <p style="margin:0 0 8px 0; font-size:13px; color:#cbd5e1;">Scan QR code or open UPI app to pay:</p>
+        <img id="checkoutQrImg" src="" alt="Payment QR" style="border-radius:10px; border:2px solid white; width:160px; height:160px; background:white; padding:5px;">
+        <div style="margin-top:10px; display:flex; gap:8px; justify-content:center;">
+          <a id="checkoutQrDownload" href="" download="Payment_QR.png" target="_blank"><button style="padding:6px 12px; font-size:12px; background:#475569; width:auto;">📥 Download QR</button></a>
+          <a id="checkoutUpiLink" href=""><button style="padding:6px 12px; font-size:12px; background:#059669; width:auto;">⚡ Pay via UPI App</button></a>
+        </div>
+      </div>
+
+      <div style="margin-top:15px;">
+        <input type="text" id="checkoutUtrInput" placeholder="Enter 12-digit UPI UTR Number after payment">
+        <button onclick="confirmCheckoutOrder()" style="background:#059669;">Submit UTR for Approval</button>
+      </div>
+    </div>
   </div>
 
   <!-- PURCHASES TAB -->
@@ -248,16 +269,16 @@
       <div id="subPage_stockPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
-          <h4 style="color:#fbbf24;">📁 Manage Category Pricing & Stock</h4>
+          <h4 style="color:#fbbf24;">📁 Manage Category Pricing & Title</h4>
           <input type="text" id="catNameInput" placeholder="Category Name (e.g., Netflix, Accounts)">
           <input type="text" id="catTitleInput" placeholder="Default Item Title (e.g., 1 Month Premium Account)">
-          <input type="number" id="catPriceInput" placeholder="Fixed Price for Category (₹)">
-          <button onclick="saveCategoryMeta()">Save Category Pricing & Title</button>
+          <input type="number" id="catPriceInput" placeholder="Fixed Category Price (₹)">
+          <button onclick="saveCategoryMeta()">Save Category Meta</button>
         </div>
 
         <div class="admin-section">
-          <h4>📦 Add Stock (Single or Bulk)</h4>
-          <input type="text" id="targetCategorySelect" placeholder="Enter Category Name to Add Stock">
+          <h4>📦 Add Stock to Category (Bulk / Single)</h4>
+          <input type="text" id="targetCategorySelect" placeholder="Enter Category Name">
           
           <label style="font-size:13px; color:#cbd5e1;">Upload Type:</label>
           <select id="stockAddMode" onchange="toggleStockMode()">
@@ -267,7 +288,7 @@
           </select>
 
           <div id="bulkStockDiv">
-            <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line will be added as 1 item automatically)..." style="height:90px; font-family:monospace;"></textarea>
+            <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line = 1 item)..." style="height:90px; font-family:monospace;"></textarea>
           </div>
           <div id="singleTextDiv" class="hidden">
             <textarea id="singleTextData" placeholder="Paste single JSON or text..." style="height:90px; font-family:monospace;"></textarea>
@@ -276,7 +297,7 @@
             <input type="file" id="singleFileInput">
           </div>
 
-          <button onclick="processStockUpload()" style="background:#059669;">Upload Stock to Category</button>
+          <button onclick="processStockUpload()" style="background:#059669;">Publish Stock Using Category Price & Title</button>
         </div>
 
         <div class="admin-section">
@@ -345,6 +366,8 @@
   let currentTab = localStorage.getItem('currentTab') || 'auth';
   let isLoginMode = false;
   const merchantUpiId = "9870815480@slc";
+
+  let activeCheckoutProduct = null;
 
   window.onload = function() {
     let loginTime = localStorage.getItem('loginTime');
@@ -484,6 +507,7 @@
     } else if(tab === 'store') {
       if(!currentUser) { document.getElementById('authContainer').classList.add('hidden'); return; }
       document.getElementById('storeTab').classList.remove('hidden');
+      cancelCheckout();
       loadCategoriesDropdown();
       renderProducts();
     } else if(tab === 'myPurchases') {
@@ -520,7 +544,7 @@
   function logoutAdmin() {
     isAdminLoggedIn = false;
     localStorage.removeItem('isAdminLoggedIn');
-    document.getElementById('adminLogin').classList.remove('hidden');
+    document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminDashboard').classList.add('hidden');
     document.getElementById('adminPassInput').value = '';
   }
@@ -585,7 +609,19 @@
     db.ref('category_meta/' + catName).set({ name: catName, title, price }, (error) => {
       if(error) { alert('Failed to save category meta.'); }
       else {
-        alert(`Category [${catName}] pricing & title saved successfully!`);
+        // Also update all available products in this category to new price
+        db.ref('products').once('value', (snapshot) => {
+          let products = snapshot.val();
+          if(products) {
+            Object.keys(products).forEach(k => {
+              if(products[k].category === catName && products[k].status === 'available') {
+                db.ref('products/' + k).update({ price: price });
+              }
+            });
+          }
+        });
+
+        alert(`Category [${catName}] pricing & title saved and updated successfully!`);
         document.getElementById('catNameInput').value = '';
         document.getElementById('catTitleInput').value = '';
         document.getElementById('catPriceInput').value = '';
@@ -699,27 +735,11 @@
         if(selectedCat === 'all' || p.category === selectedCat) {
           if(p.status === 'available') {
             count++;
-            let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${p.price}&cu=INR`;
-            let qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
-
             list.innerHTML += `
-              <div class="product-card">
+              <div class="product-card" id="prod_card_${key}">
                 <h4 style="margin:0 0 5px 0; color:#fbbf24; font-size:18px;">${p.name}</h4>
                 <p style="margin:0 0 12px 0; font-size:14px;"><b>Category:</b> ${p.category} | <span style="color:#ff3366; font-size:16px; font-weight:bold;">₹${p.price}</span></p>
-                
-                <div class="payment-box">
-                  <p style="margin:0 0 8px 0; font-size:13px; color:#cbd5e1;">Scan QR code or open UPI app to pay:</p>
-                  <img src="${qrApi}" alt="Payment QR" style="border-radius:10px; border:2px solid white; width:150px; height:150px; background:white; padding:5px;">
-                  <div style="margin-top:10px; display:flex; gap:8px; justify-content:center;">
-                    <a href="${qrApi}" download="QR_${p.name}.png" target="_blank"><button style="padding:6px 12px; font-size:12px; background:#475569; width:auto;">📥 Download QR</button></a>
-                    <a href="${upiString}"><button style="padding:6px 12px; font-size:12px; background:#059669; width:auto;">⚡ Pay via UPI App</button></a>
-                  </div>
-                </div>
-
-                <div style="margin-top:14px;">
-                  <input type="text" id="utr_${key}" placeholder="Enter 12-digit UPI UTR Number after payment">
-                  <button onclick="submitOrder('${key}', '${p.name}', '${p.price}')">Submit Payment UTR for Approval</button>
-                </div>
+                <button onclick="startCheckout('${key}', '${p.name}', '${p.price}')" style="background:linear-gradient(135deg, #059669, #10b981);">🛒 Buy Now</button>
               </div>
             `;
           }
@@ -729,13 +749,45 @@
     });
   }
 
-  function submitOrder(key, name, price) {
-    let utr = document.getElementById(`utr_${key}`).value.trim();
-    if(!utr) { alert('Please enter your UTR number!'); return; }
+  function startCheckout(key, name, price) {
+    activeCheckoutProduct = { key, name, price };
     
+    // Hide product list and category filter, show checkout view
+    document.getElementById('productList').classList.add('hidden');
+    document.getElementById('categoryFilter').parentElement.classList.add('hidden');
+    
+    let checkoutView = document.getElementById('checkoutView');
+    checkoutView.classList.remove('hidden');
+
+    document.getElementById('checkoutTitle').innerText = `Checkout: ${name}`;
+    document.getElementById('checkoutDetails').innerHTML = `<b>Category Item:</b> ${name}<br><b>Total Price:</b> <span style="color:#ff3366; font-size:16px; font-weight:bold;">₹${price}</span>`;
+
+    let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${price}&cu=INR`;
+    let qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
+
+    document.getElementById('checkoutQrImg').src = qrApi;
+    document.getElementById('checkoutQrDownload').href = qrApi;
+    document.getElementById('checkoutUpiLink').href = upiString;
+    document.getElementById('checkoutUtrInput').value = '';
+  }
+
+  function cancelCheckout() {
+    activeCheckoutProduct = null;
+    document.getElementById('checkoutView').classList.add('hidden');
+    document.getElementById('productList').classList.remove('hidden');
+    document.getElementById('categoryFilter').parentElement.classList.remove('hidden');
+  }
+
+  function confirmCheckoutOrder() {
+    if(!activeCheckoutProduct) return;
+    let utr = document.getElementById('checkoutUtrInput').value.trim();
+    if(!utr) { alert('Please enter your 12-digit UTR number!'); return; }
+
+    let { key, name, price } = activeCheckoutProduct;
+
     db.ref('products/' + key).once('value', (snapshot) => {
       let p = snapshot.val();
-      if(!p || p.status !== 'available') { alert('Item is out of stock or sold!'); return; }
+      if(!p || p.status !== 'available') { alert('Item is out of stock or already sold!'); cancelCheckout(); renderProducts(); return; }
 
       db.ref('products/' + key).update({ status: 'pending' });
 
@@ -753,7 +805,7 @@
       });
 
       alert('Order submitted successfully! Admin will verify your UTR and unlock your item shortly.');
-      document.getElementById(`utr_${key}`).value = '';
+      cancelCheckout();
       switchTab('myPurchases');
     });
   }
@@ -911,7 +963,7 @@
 
           cList.innerHTML += `
             <div class="category-card">
-              <h4 style="margin:0 0 5px 0; color:#ff3366;">📁 ${cat} <span style="font-size:12px; color:#fbbf24;">(₹${data.price || 'N/A'})</span></h4>
+              <h4 style="margin:0 0 5px 0; color:#ff3366;">📁 ${cat} <span style="font-size:12px; color:#fbbf24;">(Price: ₹${data.price || 'N/A'})</span></h4>
               <p style="margin:0 0 10px 0; font-size:13px; color:#cbd5e1;">Available: <b>${data.available}</b> | Pending: <b>${data.pending}</b> | Sold: <b>${data.sold}</b></p>
               ${itemsHtml}
               <button onclick="document.getElementById('targetCategorySelect').value='${cat}'; openAdminSubPage('stockPage');" style="margin-top:8px; background:#0284c7; font-size:12px; padding:6px;">⚡ Add Stock to ${cat}</button>
