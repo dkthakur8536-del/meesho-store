@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meesho Digital Store - Secure Telegram Edition</title>
+  <title>Meesho Digital Store - Elite Fixed Edition</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     @keyframes rgbGlow {
@@ -185,8 +185,8 @@
         <p style="margin:0 0 8px 0; font-size:13px; color:#cbd5e1;">Scan QR or pay via UPI App:</p>
         <img id="checkoutQrImg" src="" alt="Payment QR" style="border-radius:10px; border:2px solid white; width:160px; height:160px; background:white; padding:5px;">
         <div style="margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-          <button onclick="downloadQrCode()" style="padding:6px 12px; font-size:12px; background:#475569; width:auto; margin:0;">📥 Download QR</button>
-          <a id="checkoutUpiLink" href="" style="text-decoration:none;"><button style="padding:6px 12px; font-size:12px; background:#059669; width:auto; margin:0; border:none;">⚡ Pay via UPI App</button></a>
+          <button onclick="downloadQrImage()" style="padding:6px 12px; font-size:12px; background:#475569; width:auto; margin:0;">📥 Download QR</button>
+          <button onclick="triggerUpiPayment()" style="padding:6px 12px; font-size:12px; background:#059669; width:auto; margin:0;">⚡ Pay via UPI App</button>
         </div>
       </div>
 
@@ -221,7 +221,7 @@
         <div class="admin-menu-card" onclick="openAdminSubPage('stockPage')">
           <div>
             <h4 style="margin:0; color:#38bdf8;">📁 Category & Stock Management</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Manage category prices, titles, single & bulk stock</p>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Manage pricing, bulk, single text & file-to-text upload</p>
           </div>
           <span style="font-size:20px; color:#38bdf8;">➔</span>
         </div>
@@ -265,9 +265,26 @@
         </div>
 
         <div class="admin-section">
-          <h4>📦 Add Stock to Category</h4>
+          <h4>📦 Add Stock to Category (Bulk, Single Text or File)</h4>
           <input type="text" id="targetCategorySelect" placeholder="Enter Category Name">
-          <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line = 1 item)..." style="height:90px; font-family:monospace;"></textarea>
+          
+          <label style="font-size:13px; color:#cbd5e1;">Upload Type:</label>
+          <select id="stockAddMode" onchange="toggleStockMode()">
+            <option value="bulk">⚡ Bulk Add Multiple Items (Paste Lines)</option>
+            <option value="single_text">📝 Single Text / JSON</option>
+            <option value="single_file">📁 Upload File (.txt / .json converted to Text)</option>
+          </select>
+
+          <div id="bulkStockDiv">
+            <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line = 1 item)..." style="height:90px; font-family:monospace;"></textarea>
+          </div>
+          <div id="singleTextDiv" class="hidden">
+            <textarea id="singleTextData" placeholder="Paste single JSON or text content..." style="height:90px; font-family:monospace;"></textarea>
+          </div>
+          <div id="singleFileDiv" class="hidden">
+            <input type="file" id="singleFileInput" accept=".txt,.json">
+          </div>
+
           <button onclick="processStockUpload()" style="background:#059669;">Publish Stock Using Category Price</button>
         </div>
 
@@ -536,6 +553,17 @@
   }
 </script>
 <script>
+  function toggleStockMode() {
+    let mode = document.getElementById('stockAddMode').value;
+    document.getElementById('bulkStockDiv').classList.add('hidden');
+    document.getElementById('singleTextDiv').classList.add('hidden');
+    document.getElementById('singleFileDiv').classList.add('hidden');
+
+    if(mode === 'bulk') document.getElementById('bulkStockDiv').classList.remove('hidden');
+    else if(mode === 'single_text') document.getElementById('singleTextDiv').classList.remove('hidden');
+    else if(mode === 'single_file') document.getElementById('singleFileDiv').classList.remove('hidden');
+  }
+
   function saveCategoryMeta() {
     let catName = document.getElementById('catNameInput').value.trim();
     let title = document.getElementById('catTitleInput').value.trim();
@@ -567,27 +595,63 @@
       let meta = snapshot.val();
       if(!meta) { alert('Please first save category pricing & title!'); return; }
 
-      let bulkText = document.getElementById('bulkStockData').value.trim();
-      if(!bulkText) { alert('Please paste items data!'); return; }
-      let lines = bulkText.split('\n').filter(l => l.trim() !== '');
+      let mode = document.getElementById('stockAddMode').value;
+      if(mode === 'bulk') {
+        let bulkText = document.getElementById('bulkStockData').value.trim();
+        if(!bulkText) { alert('Please paste items data!'); return; }
+        let lines = bulkText.split('\n').filter(l => l.trim() !== '');
 
-      lines.forEach((line, index) => {
-        let itemName = `${meta.title} #${index + 1}`;
-        let newRef = db.ref('products').push();
-        newRef.set({
-          id: newRef.key,
-          category: category,
-          name: itemName,
-          price: meta.price,
-          content: line.trim(),
-          status: 'available',
-          date: new Date().toLocaleString()
+        lines.forEach((line, index) => {
+          let itemName = `${meta.title} #${index + 1}`;
+          let newRef = db.ref('products').push();
+          newRef.set({
+            id: newRef.key,
+            category: category,
+            name: itemName,
+            price: meta.price,
+            content: line.trim(),
+            status: 'available',
+            date: new Date().toLocaleString()
+          });
         });
-      });
-      alert(`Successfully added ${lines.length} stock items!`);
-      document.getElementById('bulkStockData').value = '';
-      loadAdminInventory();
+        alert(`Successfully added ${lines.length} stock items!`);
+        document.getElementById('bulkStockData').value = '';
+        loadAdminInventory();
+
+      } else if(mode === 'single_text') {
+        let textContent = document.getElementById('singleTextData').value.trim();
+        if(!textContent) { alert('Please paste content!'); return; }
+        saveProductToDB(category, meta.title, meta.price, textContent);
+        document.getElementById('singleTextData').value = '';
+
+      } else if(mode === 'single_file') {
+        let fileInput = document.getElementById('singleFileInput');
+        if(fileInput.files.length === 0) { alert('Please upload a file (.txt or .json)!'); return; }
+        let file = fileInput.files[0];
+        let reader = new FileReader();
+        reader.onload = function(e) {
+          let fileTextContent = e.target.result; // Converted to text
+          saveProductToDB(category, meta.title, meta.price, fileTextContent);
+          fileInput.value = '';
+        };
+        reader.readAsText(file);
+      }
     });
+  }
+
+  function saveProductToDB(category, name, price, content) {
+    let newRef = db.ref('products').push();
+    newRef.set({ 
+      id: newRef.key, 
+      category, 
+      name, 
+      price, 
+      content, 
+      status: 'available',
+      date: new Date().toLocaleString() 
+    });
+    alert('Item added successfully with text content!');
+    loadAdminInventory();
   }
 
   function loadCategoriesDropdown() {
@@ -644,28 +708,44 @@
     let qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
 
     document.getElementById('checkoutQrImg').src = qrApi;
-    document.getElementById('checkoutUpiLink').href = upiString;
     document.getElementById('checkoutUtrInput').value = '';
   }
 
-  // Direct Blob Download for QR Code
-  function downloadQrCode() {
-    let qrImgSrc = document.getElementById('checkoutQrImg').src;
-    fetch(qrImgSrc)
+  // FIXED ONE-CLICK DIRECT QR IMAGE DOWNLOAD
+  function downloadQrImage() {
+    let imgElement = document.getElementById('checkoutQrImg');
+    let imgSrc = imgElement.src;
+    fetch(imgSrc)
       .then(response => response.blob())
       .then(blob => {
-        let blobUrl = window.URL.createObjectURL(blob);
+        let url = window.URL.createObjectURL(blob);
         let a = document.createElement('a');
-        a.href = blobUrl;
+        a.style.display = 'none';
+        a.href = url;
         a.download = 'Meesho_Payment_QR.png';
         document.body.appendChild(a);
         a.click();
+        window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(blobUrl);
       })
       .catch(() => {
-        window.open(qrImgSrc, '_blank');
+        window.open(imgSrc, '_blank');
       });
+  }
+
+  // FIXED ROBUST UPI PAYMENT TRIGGER
+  function triggerUpiPayment() {
+    if(!activeCheckoutProduct) return;
+    let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${activeCheckoutProduct.price}&cu=INR`;
+    if (window.Telegram && window.Telegram.WebApp) {
+      try {
+        window.Telegram.WebApp.openLink(upiString);
+      } catch(e) {
+        window.location.href = upiString;
+      }
+    } else {
+      window.location.href = upiString;
+    }
   }
 
   function cancelCheckout() {
@@ -748,7 +828,7 @@
     db.ref('admin_config').once('value', (snapshot) => {
       let config = snapshot.val() || {};
       if(config.botToken && tgUserId) {
-        let msg = encodeURIComponent(`🎉 Your order has been approved!\n\n📦 *Product:* ${purchaseId}\n🔑 *Digital Content / JSON:*\n\`\`\`\n${content}\n\`\`\``);
+        let msg = encodeURIComponent(`🎉 Your order has been approved!\n\n📦 *Product:* ${purchaseId}\n🔑 *Digital Content / Text:*\n\`\`\`\n${content}\n\`\`\``);
         fetch(`https://api.telegram.org/bot${config.botToken}/sendMessage?chat_id=${tgUserId}&text=${msg}&parse_mode=Markdown`)
           .then(res => res.json())
           .then(data => {
