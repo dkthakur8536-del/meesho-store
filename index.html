@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meesho Digital Store - Elite Fixed Edition</title>
+  <title>Meesho Digital Store - Elite Edition</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     @keyframes rgbGlow {
@@ -141,7 +141,7 @@
 <body>
 <div class="container">
   <div class="top-bar">
-    <h2 style="margin:0; font-size:22px; background: linear-gradient(45deg, #ff3366, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">🛍️ Meesho Secure Store</h2>
+    <h2 style="margin:0; font-size:22px; background: linear-gradient(45deg, #ff3366, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">🛍️ Meesho Digital Store</h2>
     <div class="menu-dropdown" id="menuBar" style="display:none;">
       <button style="width:auto; padding:8px 16px; font-size:18px; border-radius:10px;">⋮</button>
       <div class="dropdown-content">
@@ -185,13 +185,14 @@
         <p style="margin:0 0 8px 0; font-size:13px; color:#cbd5e1;">Scan QR or pay via UPI App:</p>
         <img id="checkoutQrImg" src="" alt="Payment QR" style="border-radius:10px; border:2px solid white; width:160px; height:160px; background:white; padding:5px;">
         <div style="margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-          <button onclick="downloadQrImage()" style="padding:6px 12px; font-size:12px; background:#475569; width:auto; margin:0;">📥 Download QR</button>
+          <button onclick="downloadQrCode()" style="padding:6px 12px; font-size:12px; background:#475569; width:auto; margin:0;">📥 Download QR</button>
           <button onclick="triggerUpiPayment()" style="padding:6px 12px; font-size:12px; background:#059669; width:auto; margin:0;">⚡ Pay via UPI App</button>
+          <button onclick="copyUpiId()" style="padding:6px 12px; font-size:12px; background:#0284c7; width:auto; margin:0;">📋 Copy UPI ID</button>
         </div>
       </div>
 
       <div style="margin-top:15px;">
-        <input type="text" id="checkoutUtrInput" placeholder="Enter 12-digit UPI UTR Number">
+        <input type="text" id="checkoutUtrInput" placeholder="Enter Exact 12-Digit UTR Number (e.g. 4231...)" maxlength="12">
         <button onclick="confirmCheckoutOrder()" style="background:#059669;">Submit UTR for Approval</button>
       </div>
     </div>
@@ -221,7 +222,7 @@
         <div class="admin-menu-card" onclick="openAdminSubPage('stockPage')">
           <div>
             <h4 style="margin:0; color:#38bdf8;">📁 Category & Stock Management</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Manage pricing, bulk, single text & file-to-text upload</p>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Manage category prices, file/text upload & bulk stock</p>
           </div>
           <span style="font-size:20px; color:#38bdf8;">➔</span>
         </div>
@@ -229,7 +230,7 @@
         <div class="admin-menu-card" onclick="openAdminSubPage('approvalsPage')">
           <div>
             <h4 style="margin:0; color:#fbbf24;">⚡ Payment Approvals <span id="pendingBadgeCount" style="background:#dc2626; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Verify UTRs and auto-deliver via Telegram Bot</p>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Verify UTRs and instantly deliver in-app</p>
           </div>
           <span style="font-size:20px; color:#fbbf24;">➔</span>
         </div>
@@ -244,8 +245,8 @@
 
         <div class="admin-menu-card" onclick="openAdminSubPage('securityPage')">
           <div>
-            <h4 style="margin:0; color:#f43f5e;">🔒 Security & Bot Settings</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Change Master Password & Telegram Bot Token</p>
+            <h4 style="margin:0; color:#f43f5e;">🔒 Security Settings</h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Change Master Admin Password</p>
           </div>
           <span style="font-size:20px; color:#f43f5e;">➔</span>
         </div>
@@ -253,7 +254,7 @@
         <button onclick="logoutAdmin()" style="background:#dc2626; margin-top:25px;">Logout Admin</button>
       </div>
 
-      <!-- SUB PAGE 1: CATEGORY & STOCK -->
+      <!-- SUB PAGE 1: CATEGORY & STOCK (With File & Text Upload Restored) -->
       <div id="subPage_stockPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
@@ -265,14 +266,14 @@
         </div>
 
         <div class="admin-section">
-          <h4>📦 Add Stock to Category (Bulk, Single Text or File)</h4>
+          <h4>📦 Add Stock to Category (Bulk, Text, or File Upload)</h4>
           <input type="text" id="targetCategorySelect" placeholder="Enter Category Name">
           
-          <label style="font-size:13px; color:#cbd5e1;">Upload Type:</label>
+          <label style="font-size:13px; color:#cbd5e1;">Upload Mode:</label>
           <select id="stockAddMode" onchange="toggleStockMode()">
-            <option value="bulk">⚡ Bulk Add Multiple Items (Paste Lines)</option>
+            <option value="bulk">⚡ Bulk Add Multiple Lines</option>
             <option value="single_text">📝 Single Text / JSON</option>
-            <option value="single_file">📁 Upload File (.txt / .json converted to Text)</option>
+            <option value="single_file">📁 Upload File (.txt / .json)</option>
           </select>
 
           <div id="bulkStockDiv">
@@ -285,7 +286,7 @@
             <input type="file" id="singleFileInput" accept=".txt,.json">
           </div>
 
-          <button onclick="processStockUpload()" style="background:#059669;">Publish Stock Using Category Price</button>
+          <button onclick="processStockUpload()" style="background:#059669;">Publish Stock Items</button>
         </div>
 
         <div class="admin-section">
@@ -298,7 +299,7 @@
       <div id="subPage_approvalsPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section" style="border: 1px solid #d97706;">
-          <h4 style="color:#fbbf24;">⚡ Payment Verification & Telegram Auto-Delivery</h4>
+          <h4 style="color:#fbbf24;">⚡ Payment Verification & Instant In-App Delivery</h4>
           <div id="adminPendingOrders"></div>
         </div>
       </div>
@@ -313,7 +314,7 @@
         </div>
       </div>
 
-      <!-- SUB PAGE 4: SECURITY & BOT CONFIG -->
+      <!-- SUB PAGE 4: SECURITY -->
       <div id="subPage_securityPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
@@ -322,11 +323,6 @@
           <input type="password" id="newAdminPass" placeholder="Enter New Admin Password">
           <input type="password" id="confirmAdminPass" placeholder="Confirm New Password">
           <button onclick="updateAdminPassword()">Update Admin Password</button>
-        </div>
-        <div class="admin-section" style="margin-top:15px;">
-          <h4>🤖 Telegram Bot Token for Auto-Delivery</h4>
-          <input type="text" id="botTokenInput" placeholder="Enter Telegram Bot Token">
-          <button onclick="saveBotToken()" style="background:#0284c7;">Save Bot Token</button>
         </div>
       </div>
 
@@ -350,7 +346,6 @@
   const db = firebase.database();
 
   let currentUser = localStorage.getItem('currentUser') || null;
-  let currentTgUserId = null;
   let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
   let currentTab = localStorage.getItem('currentTab') || 'auth';
   let isLoginMode = false;
@@ -362,14 +357,9 @@
     window.Telegram.WebApp.expand();
     if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
       let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-      currentTgUserId = tgUser.id;
       currentUser = tgUser.username ? `@${tgUser.username}` : `${tgUser.first_name}_${tgUser.id}`;
       localStorage.setItem('currentUser', currentUser);
-      localStorage.setItem('currentTgUserId', currentTgUserId);
     }
-  }
-  if (!currentTgUserId) {
-    currentTgUserId = localStorage.getItem('currentTgUserId') || null;
   }
 
   window.onload = function() {
@@ -417,13 +407,10 @@
       let userData = snapshot.val();
       if(!isLoginMode) {
         if(userData) { alert('User already exists! Please login.'); return; }
-        db.ref('users/' + email).set({ email, pass, tgUserId: currentTgUserId || '', date: new Date().toLocaleString() });
+        db.ref('users/' + email).set({ email, pass, date: new Date().toLocaleString() });
         alert('Signup successful!');
       } else {
         if(!userData || userData.pass !== pass) { alert('Invalid email or password!'); return; }
-        if(currentTgUserId && !userData.tgUserId) {
-          db.ref('users/' + email).update({ tgUserId: currentTgUserId });
-        }
       }
 
       currentUser = email;
@@ -436,9 +423,7 @@
 
   function logoutUser() {
     currentUser = null;
-    currentTgUserId = null;
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('currentTgUserId');
     localStorage.setItem('currentTab', 'auth');
     document.getElementById('menuBar').style.display = 'none';
     document.getElementById('storeTab').classList.add('hidden');
@@ -543,16 +528,6 @@
     });
   }
 
-  function saveBotToken() {
-    let token = document.getElementById('botTokenInput').value.trim();
-    if(!token) { alert('Please enter Bot Token!'); return; }
-    db.ref('admin_config/botToken').set(token, (err) => {
-      if(err) alert('Failed to save token');
-      else alert('Telegram Bot Token saved successfully!');
-    });
-  }
-</script>
-<script>
   function toggleStockMode() {
     let mode = document.getElementById('stockAddMode').value;
     document.getElementById('bulkStockDiv').classList.add('hidden');
@@ -563,7 +538,8 @@
     else if(mode === 'single_text') document.getElementById('singleTextDiv').classList.remove('hidden');
     else if(mode === 'single_file') document.getElementById('singleFileDiv').classList.remove('hidden');
   }
-
+</script>
+<script>
   function saveCategoryMeta() {
     let catName = document.getElementById('catNameInput').value.trim();
     let title = document.getElementById('catTitleInput').value.trim();
@@ -593,7 +569,7 @@
 
     db.ref('category_meta/' + category).once('value', (snapshot) => {
       let meta = snapshot.val();
-      if(!meta) { alert('Please first save category pricing & title!'); return; }
+      if(!meta) { alert('Please first save category pricing & title in the category manager above!'); return; }
 
       let mode = document.getElementById('stockAddMode').value;
       if(mode === 'bulk') {
@@ -626,12 +602,12 @@
 
       } else if(mode === 'single_file') {
         let fileInput = document.getElementById('singleFileInput');
-        if(fileInput.files.length === 0) { alert('Please upload a file (.txt or .json)!'); return; }
+        if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
         let file = fileInput.files[0];
         let reader = new FileReader();
         reader.onload = function(e) {
-          let fileTextContent = e.target.result; // Converted to text
-          saveProductToDB(category, meta.title, meta.price, fileTextContent);
+          let content = e.target.result;
+          saveProductToDB(category, meta.title, meta.price, content);
           fileInput.value = '';
         };
         reader.readAsText(file);
@@ -650,7 +626,7 @@
       status: 'available',
       date: new Date().toLocaleString() 
     });
-    alert('Item added successfully with text content!');
+    alert('Stock item added successfully!');
     loadAdminInventory();
   }
 
@@ -711,41 +687,33 @@
     document.getElementById('checkoutUtrInput').value = '';
   }
 
-  // FIXED ONE-CLICK DIRECT QR IMAGE DOWNLOAD
-  function downloadQrImage() {
-    let imgElement = document.getElementById('checkoutQrImg');
-    let imgSrc = imgElement.src;
-    fetch(imgSrc)
-      .then(response => response.blob())
-      .then(blob => {
-        let url = window.URL.createObjectURL(blob);
-        let a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'Meesho_Payment_QR.png';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      })
-      .catch(() => {
-        window.open(imgSrc, '_blank');
-      });
+  async function downloadQrCode() {
+    let qrUrl = document.getElementById('checkoutQrImg').src;
+    try {
+      let response = await fetch(qrUrl);
+      let blob = await response.blob();
+      let blobUrl = URL.createObjectURL(blob);
+      let a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'Payment_QR.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      alert('QR Code downloaded successfully to your device!');
+    } catch(e) {
+      window.open(qrUrl, '_blank');
+    }
   }
 
-  // FIXED ROBUST UPI PAYMENT TRIGGER
   function triggerUpiPayment() {
     if(!activeCheckoutProduct) return;
     let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${activeCheckoutProduct.price}&cu=INR`;
-    if (window.Telegram && window.Telegram.WebApp) {
-      try {
-        window.Telegram.WebApp.openLink(upiString);
-      } catch(e) {
-        window.location.href = upiString;
-      }
-    } else {
-      window.location.href = upiString;
-    }
+    window.location.href = upiString;
+  }
+
+  function copyUpiId() {
+    navigator.clipboard.writeText(merchantUpiId).then(() => alert('UPI ID copied: ' + merchantUpiId));
   }
 
   function cancelCheckout() {
@@ -758,7 +726,13 @@
   function confirmCheckoutOrder() {
     if(!activeCheckoutProduct) return;
     let utr = document.getElementById('checkoutUtrInput').value.trim();
-    if(!utr) { alert('Please enter 12-digit UTR number!'); return; }
+    
+    // Strict 12-digit UTR validation
+    let utrRegex = /^\d{12}$/;
+    if(!utrRegex.test(utr)) {
+      alert('❌ Invalid UTR! Please enter exact 12-digit numeric UPI UTR number.');
+      return;
+    }
 
     let { key, name, price } = activeCheckoutProduct;
     db.ref('products/' + key).once('value', (snapshot) => {
@@ -771,7 +745,6 @@
         id: purchaseRef.key,
         productKey: key,
         user: currentUser,
-        tgUserId: currentTgUserId || '',
         productName: name,
         price: price,
         utr: utr,
@@ -780,7 +753,7 @@
         date: new Date().toLocaleString()
       });
 
-      alert('Order submitted successfully! Admin will verify UTR shortly.');
+      alert('Order submitted successfully! Admin will verify your UTR.');
       cancelCheckout();
       switchTab('myPurchases');
     });
@@ -804,11 +777,11 @@
           pendingCount++;
           pList.innerHTML += `
             <div style="background:rgba(0,0,0,0.4); padding:12px; margin:8px 0; border-radius:8px; border-left:4px solid #d97706; font-size:13px;">
-              <b>Buyer:</b> ${item.user} (TG ID:${item.tgUserId || 'N/A'})<br>
+              <b>Buyer:</b> ${item.user}<br>
               <b>Item:</b> ${item.productName} (₹${item.price})<br>
               <b>UTR:</b> <span style="color:#38bdf8; font-weight:bold; font-size:14px;">${item.utr}</span><br>
               <div style="margin-top:10px; display:flex; gap:8px;">
-                <button onclick="approveOrder('${item.id}', '${item.productKey}', '${item.tgUserId}', encodeURIComponent(\`${item.content}\`))" style="background:#059669; padding:6px 12px; font-size:12px; margin:0; width:auto;">✅ Verify & Auto-Deliver to Telegram</button>
+                <button onclick="approveOrder('${item.id}', '${item.productKey}')" style="background:#059669; padding:6px 12px; font-size:12px; margin:0; width:auto;">✅ Verify & Instant Deliver</button>
                 <button onclick="rejectOrder('${item.id}', '${item.productKey}')" style="background:#dc2626; padding:6px 12px; font-size:12px; margin:0; width:auto;">❌ Reject</button>
               </div>
             </div>
@@ -820,27 +793,12 @@
     });
   }
 
-  function approveOrder(purchaseId, productKey, tgUserId, encodedContent) {
-    let content = decodeURIComponent(encodedContent);
+  function approveOrder(purchaseId, productKey) {
     db.ref('purchases/' + purchaseId).update({ status: 'approved' });
     db.ref('products/' + productKey).update({ status: 'sold' });
-
-    db.ref('admin_config').once('value', (snapshot) => {
-      let config = snapshot.val() || {};
-      if(config.botToken && tgUserId) {
-        let msg = encodeURIComponent(`🎉 Your order has been approved!\n\n📦 *Product:* ${purchaseId}\n🔑 *Digital Content / Text:*\n\`\`\`\n${content}\n\`\`\``);
-        fetch(`https://api.telegram.org/bot${config.botToken}/sendMessage?chat_id=${tgUserId}&text=${msg}&parse_mode=Markdown`)
-          .then(res => res.json())
-          .then(data => {
-            if(data.ok) alert('Order approved & delivered directly to buyer Telegram chat!');
-            else alert('Order approved in app, but Telegram delivery failed.');
-          }).catch(() => alert('Order approved successfully!'));
-      } else {
-        alert('Order approved successfully!');
-      }
-      loadPendingOrders();
-      loadAdminInventory();
-    });
+    alert('Payment verified! Order approved and instantly delivered to buyer.');
+    loadPendingOrders();
+    loadAdminInventory();
   }
 
   function rejectOrder(purchaseId, productKey) {
@@ -867,7 +825,7 @@
           count++;
           let statusBadge = item.status === 'pending' ? '<span class="badge badge-pending">Verification Pending</span>' : '<span class="badge">Approved & Unlocked</span>';
           let deliveryContent = item.status === 'pending' ? 
-            '<p style="font-size:13px; color:#fbbf24; margin-top:8px;">⏳ Admin is verifying UTR. Content will also be sent to your Telegram chat!</p>' :
+            '<p style="font-size:13px; color:#fbbf24; margin-top:8px;">⏳ Admin is verifying UTR. Your content will appear here instantly once approved.</p>' :
             `<div style="background:rgba(0,0,0,0.6); padding:12px; border-radius:8px; margin-top:10px;"><button onclick="copyToClipboard(\`${item.content.replace(/"/g, '&quot;')}\`)" class="copy-btn">📋 Copy Content</button><pre style="white-space:pre-wrap; word-break:break-all; color:#38bdf8; font-size:12px; margin-top:8px;">${item.content}</pre></div>`;
 
           list.innerHTML += `<div class="history-item"><div style="display:flex; justify-content:space-between; align-items:center;"><h4 style="margin:0; color:#fbbf24;">${item.productName} - ₹${item.price}</h4>${statusBadge}</div><p style="margin:6px 0; font-size:13px; color:#94a3b8;">UTR: ${item.utr}</p>${deliveryContent}</div>`;
@@ -878,7 +836,7 @@
   }
 
   function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+    navigator.clipboard.writeText(text).then(() => alert('Copied successfully!'));
   }
 
   function loadAdminInventory() {
@@ -916,7 +874,7 @@
       let uList = document.getElementById('adminUsersList');
       uList.innerHTML = '<h5>Registered Users:</h5>';
       let users = s.val();
-      if(users) Object.keys(users).forEach(k => uList.innerHTML += `<div style="font-size:12px;">👤 ${users[k].email} (TG ID: ${users[k].tgUserId || 'N/A'})</div>`);
+      if(users) Object.keys(users).forEach(k => uList.innerHTML += `<div style="font-size:12px;">👤 ${users[k].email}</div>`);
     });
   }
 </script>
