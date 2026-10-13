@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meesho Digital Store - Elite Edition</title>
-  <link rel="manifest" href="manifest.json">
+  <title>Meesho Digital Store - Secure Telegram Edition</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     @keyframes rgbGlow {
       0% { background-position: 0% 50%; }
@@ -136,13 +136,12 @@
       width: auto;
       display: inline-block;
     }
-    .strength-meter { font-size: 12px; margin-top: -4px; margin-bottom: 8px; font-weight: bold; }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="top-bar">
-    <h2 style="margin:0; font-size:24px; background: linear-gradient(45deg, #ff3366, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">🛍️ Meesho Elite Store</h2>
+    <h2 style="margin:0; font-size:22px; background: linear-gradient(45deg, #ff3366, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">🛍️ Meesho Secure Store</h2>
     <div class="menu-dropdown" id="menuBar" style="display:none;">
       <button style="width:auto; padding:8px 16px; font-size:18px; border-radius:10px;">⋮</button>
       <div class="dropdown-content">
@@ -158,21 +157,11 @@
   <div id="authContainer">
     <h3 id="authTitle" style="text-align:center; color:#fbbf24; font-size:20px;">🔐 User Signup</h3>
     <input type="text" id="authEmail" placeholder="Enter Email or Phone">
-    <input type="password" id="authPass" placeholder="Enter Password (Min 8 chars)" oninput="checkPasswordStrength()">
-    <div id="passStrength" class="strength-meter"></div>
+    <input type="password" id="authPass" placeholder="Enter Password">
     <input type="password" id="authConfirmPass" placeholder="Confirm Password">
-    <div style="display:flex; align-items:center; gap:8px; margin:8px 0;">
-      <input type="checkbox" id="userShowPass" onclick="toggleUserPassword()" style="width:18px; height:18px;">
-      <label for="userShowPass" style="font-size:13px; color:#cbd5e1;">Show Passwords</label>
-    </div>
-    <div style="display:flex; align-items:center; gap:8px; margin:8px 0;">
-      <input type="checkbox" id="keepSignedIn" style="width:18px; height:18px;" checked>
-      <label for="keepSignedIn" style="font-size:13px; color:#cbd5e1;">Keep me signed in for 10 days</label>
-    </div>
     <button id="authBtn" onclick="handleUserAuth()">Register & Start Shopping</button>
     <span id="authToggleText" class="link-text" onclick="toggleAuthMode()">Already have an account? Login here</span>
-    <span class="link-text" onclick="forgotPassword()">Forgot Password?</span>
-    <span class="link-text" onclick="switchTab('admin')" style="color:#94a3b8; margin-top:25px;">Go to Admin Control Panel ➔</span>
+    <span class="link-text" onclick="switchTab('admin')" style="color:#94a3b8; margin-top:20px;">Go to Admin Control Panel ➔</span>
   </div>
 
   <!-- STORE TAB -->
@@ -186,23 +175,23 @@
     </div>
     <div id="productList"></div>
     
-    <!-- CHECKOUT VIEW (Initially Hidden) -->
+    <!-- CHECKOUT VIEW -->
     <div id="checkoutView" class="hidden product-card" style="border: 2px solid #ff3366;">
       <button onclick="cancelCheckout()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:10px;">⬅ Back to Catalog</button>
       <h3 id="checkoutTitle" style="color:#fbbf24; margin-top:0;">Checkout</h3>
       <p id="checkoutDetails" style="font-size:14px; color:#cbd5e1;"></p>
       
       <div class="payment-box">
-        <p style="margin:0 0 8px 0; font-size:13px; color:#cbd5e1;">Scan QR code or open UPI app to pay:</p>
+        <p style="margin:0 0 8px 0; font-size:13px; color:#cbd5e1;">Scan QR or pay via UPI App:</p>
         <img id="checkoutQrImg" src="" alt="Payment QR" style="border-radius:10px; border:2px solid white; width:160px; height:160px; background:white; padding:5px;">
-        <div style="margin-top:10px; display:flex; gap:8px; justify-content:center;">
+        <div style="margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
           <a id="checkoutQrDownload" href="" download="Payment_QR.png" target="_blank"><button style="padding:6px 12px; font-size:12px; background:#475569; width:auto;">📥 Download QR</button></a>
-          <a id="checkoutUpiLink" href=""><button style="padding:6px 12px; font-size:12px; background:#059669; width:auto;">⚡ Pay via UPI App</button></a>
+          <button onclick="triggerUpiPayment()" style="padding:6px 12px; font-size:12px; background:#059669; width:auto; margin:0;">⚡ Pay via UPI App</button>
         </div>
       </div>
 
       <div style="margin-top:15px;">
-        <input type="text" id="checkoutUtrInput" placeholder="Enter 12-digit UPI UTR Number after payment">
+        <input type="text" id="checkoutUtrInput" placeholder="Enter 12-digit UPI UTR Number">
         <button onclick="confirmCheckoutOrder()" style="background:#059669;">Submit UTR for Approval</button>
       </div>
     </div>
@@ -210,7 +199,7 @@
 
   <!-- PURCHASES TAB -->
   <div id="purchasesTab" class="hidden">
-    <h3 style="color:#f8fafc;">📦 Your Purchases & Digital Deliveries</h3>
+    <h3 style="color:#f8fafc;">📦 Your Purchases & Deliveries</h3>
     <div id="buyerPurchaseList"></div>
   </div>
   <!-- ADMIN PANEL TAB -->
@@ -221,27 +210,26 @@
     </div>
     
     <div id="adminLogin" style="margin-top:25px;">
-      <input type="password" id="adminPassInput" placeholder="Enter Admin Password (Default: 8535)">
+      <input type="password" id="adminPassInput" placeholder="Enter Master Admin Password">
       <button onclick="loginAdmin()">Login Admin</button>
     </div>
     
     <div id="adminDashboard" class="hidden">
-      <!-- Clean Menu Buttons (Multi-Page Navigation) -->
       <div id="adminMainMenuView">
         <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Select a management module:</p>
         
         <div class="admin-menu-card" onclick="openAdminSubPage('stockPage')">
           <div>
             <h4 style="margin:0; color:#38bdf8;">📁 Category & Stock Management</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Manage category prices, titles, single & bulk stock upload</p>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Manage category prices, titles, single & bulk stock</p>
           </div>
           <span style="font-size:20px; color:#38bdf8;">➔</span>
         </div>
 
         <div class="admin-menu-card" onclick="openAdminSubPage('approvalsPage')">
           <div>
-            <h4 style="margin:0; color:#fbbf24;">⚡ Payment Approvals Queue <span id="pendingBadgeCount" style="background:#dc2626; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Verify UTRs and approve buyer orders</p>
+            <h4 style="margin:0; color:#fbbf24;">⚡ Payment Approvals <span id="pendingBadgeCount" style="background:#dc2626; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Verify UTRs and auto-deliver via Telegram Bot</p>
           </div>
           <span style="font-size:20px; color:#fbbf24;">➔</span>
         </div>
@@ -249,15 +237,15 @@
         <div class="admin-menu-card" onclick="openAdminSubPage('logsPage')">
           <div>
             <h4 style="margin:0; color:#10b981;">📜 Users & Sales Logs</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">View registered users and complete transaction history</p>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">View registered users and transaction history</p>
           </div>
           <span style="font-size:20px; color:#10b981;">➔</span>
         </div>
 
         <div class="admin-menu-card" onclick="openAdminSubPage('securityPage')">
           <div>
-            <h4 style="margin:0; color:#f43f5e;">🔒 Security Settings</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Change admin password and security options</p>
+            <h4 style="margin:0; color:#f43f5e;">🔒 Security & Bot Settings</h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Change Master Password (Requires Old Pass) & Telegram Bot Token</p>
           </div>
           <span style="font-size:20px; color:#f43f5e;">➔</span>
         </div>
@@ -265,57 +253,40 @@
         <button onclick="logoutAdmin()" style="background:#dc2626; margin-top:25px;">Logout Admin</button>
       </div>
 
-      <!-- SUB PAGE 1: CATEGORY & STOCK MANAGEMENT -->
+      <!-- SUB PAGE 1: CATEGORY & STOCK -->
       <div id="subPage_stockPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
           <h4 style="color:#fbbf24;">📁 Manage Category Pricing & Title</h4>
-          <input type="text" id="catNameInput" placeholder="Category Name (e.g., Netflix, Accounts)">
-          <input type="text" id="catTitleInput" placeholder="Default Item Title (e.g., 1 Month Premium Account)">
+          <input type="text" id="catNameInput" placeholder="Category Name (e.g., Netflix)">
+          <input type="text" id="catTitleInput" placeholder="Default Item Title">
           <input type="number" id="catPriceInput" placeholder="Fixed Category Price (₹)">
           <button onclick="saveCategoryMeta()">Save Category Meta</button>
         </div>
 
         <div class="admin-section">
-          <h4>📦 Add Stock to Category (Bulk / Single)</h4>
+          <h4>📦 Add Stock to Category</h4>
           <input type="text" id="targetCategorySelect" placeholder="Enter Category Name">
-          
-          <label style="font-size:13px; color:#cbd5e1;">Upload Type:</label>
-          <select id="stockAddMode" onchange="toggleStockMode()">
-            <option value="bulk">⚡ Bulk Add Multiple Items (Paste Lines)</option>
-            <option value="single_text">📝 Single Text / JSON</option>
-            <option value="single_file">📁 Upload File (.txt / .json)</option>
-          </select>
-
-          <div id="bulkStockDiv">
-            <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line = 1 item)..." style="height:90px; font-family:monospace;"></textarea>
-          </div>
-          <div id="singleTextDiv" class="hidden">
-            <textarea id="singleTextData" placeholder="Paste single JSON or text..." style="height:90px; font-family:monospace;"></textarea>
-          </div>
-          <div id="singleFileDiv" class="hidden">
-            <input type="file" id="singleFileInput">
-          </div>
-
-          <button onclick="processStockUpload()" style="background:#059669;">Publish Stock Using Category Price & Title</button>
+          <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line = 1 item)..." style="height:90px; font-family:monospace;"></textarea>
+          <button onclick="processStockUpload()" style="background:#059669;">Publish Stock Using Category Price</button>
         </div>
 
         <div class="admin-section">
-          <h4>📊 Existing Categories & Inventory</h4>
+          <h4>📊 Existing Inventory</h4>
           <div id="adminCategoryList"></div>
         </div>
       </div>
 
-      <!-- SUB PAGE 2: PAYMENT APPROVALS -->
+      <!-- SUB PAGE 2: APPROVALS -->
       <div id="subPage_approvalsPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section" style="border: 1px solid #d97706;">
-          <h4 style="color:#fbbf24;">⚡ Payment Verification & Approval Queue</h4>
+          <h4 style="color:#fbbf24;">⚡ Payment Verification & Telegram Auto-Delivery</h4>
           <div id="adminPendingOrders"></div>
         </div>
       </div>
 
-      <!-- SUB PAGE 3: USERS & SALES LOGS -->
+      <!-- SUB PAGE 3: LOGS -->
       <div id="subPage_logsPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
@@ -325,25 +296,26 @@
         </div>
       </div>
 
-      <!-- SUB PAGE 4: SECURITY SETTINGS -->
+      <!-- SUB PAGE 4: SECURITY & BOT CONFIG -->
       <div id="subPage_securityPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
-          <h4>🔒 Change Admin Password</h4>
-          <input type="password" id="newPass" placeholder="Enter New Admin Password">
-          <input type="password" id="confirmPass" placeholder="Confirm New Password">
-          <div style="display:flex; align-items:center; gap:8px; margin:10px 0;">
-            <input type="checkbox" id="showPassToggle" onclick="toggleAdminPassword()" style="width:18px; height:18px;">
-            <label for="showPassToggle" style="font-size:13px; color:#cbd5e1;">Show Passwords</label>
-          </div>
-          <button onclick="updateAdminPassword()">Update Password</button>
+          <h4>🔒 Change Master Admin Password</h4>
+          <input type="password" id="oldAdminPass" placeholder="Enter Current Admin Password">
+          <input type="password" id="newAdminPass" placeholder="Enter New Admin Password">
+          <input type="password" id="confirmAdminPass" placeholder="Confirm New Password">
+          <button onclick="updateAdminPassword()">Update Admin Password</button>
+        </div>
+        <div class="admin-section" style="margin-top:15px;">
+          <h4>🤖 Telegram Bot Token for Auto-Delivery</h4>
+          <input type="text" id="botTokenInput" placeholder="Enter Telegram Bot Token (e.g., 123456:ABC-DEF...)">
+          <button onclick="saveBotToken()" style="background:#0284c7;">Save Bot Token</button>
         </div>
       </div>
 
     </div>
   </div>
 </div>
-<!-- Firebase SDK CDN -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
@@ -360,25 +332,31 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  let adminPassword = localStorage.getItem('adminPass') || '8535';
   let currentUser = localStorage.getItem('currentUser') || null;
+  let currentTgUserId = null;
   let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
   let currentTab = localStorage.getItem('currentTab') || 'auth';
   let isLoginMode = false;
   const merchantUpiId = "9870815480@slc";
-
   let activeCheckoutProduct = null;
 
-  window.onload = function() {
-    let loginTime = localStorage.getItem('loginTime');
-    if (loginTime) {
-      let daysPassed = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60 * 24);
-      if (daysPassed > 10) {
-        logoutUser();
-        return;
-      }
+  // Telegram WebApp Initialization
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+    if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+      let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+      currentTgUserId = tgUser.id;
+      currentUser = tgUser.username ? `@${tgUser.username}` : `${tgUser.first_name}_${tgUser.id}`;
+      localStorage.setItem('currentUser', currentUser);
+      localStorage.setItem('currentTgUserId', currentTgUserId);
     }
+  }
+  if (!currentTgUserId) {
+    currentTgUserId = localStorage.getItem('currentTgUserId') || null;
+  }
 
+  window.onload = function() {
     if (currentUser) {
       document.getElementById('authContainer').classList.add('hidden');
       document.getElementById('menuBar').style.display = 'block';
@@ -402,37 +380,12 @@
       document.getElementById('authTitle').innerText = '🔐 User Login';
       document.getElementById('authBtn').innerText = 'Login to Store';
       document.getElementById('authConfirmPass').style.display = 'none';
-      document.getElementById('passStrength').style.display = 'none';
       document.getElementById('authToggleText').innerText = "Don't have an account? Signup here";
     } else {
       document.getElementById('authTitle').innerText = '🔐 User Signup';
       document.getElementById('authBtn').innerText = 'Register & Start Shopping';
       document.getElementById('authConfirmPass').style.display = 'block';
-      document.getElementById('passStrength').style.display = 'block';
       document.getElementById('authToggleText').innerText = "Already have an account? Login here";
-    }
-  }
-
-  function toggleUserPassword() {
-    let p1 = document.getElementById('authPass');
-    let p2 = document.getElementById('authConfirmPass');
-    let type = p1.type === 'password' ? 'text' : 'password';
-    p1.type = type;
-    p2.type = type;
-  }
-
-  function checkPasswordStrength() {
-    let pass = document.getElementById('authPass').value;
-    let strengthText = document.getElementById('passStrength');
-    if(pass.length < 8) {
-      strengthText.innerText = "❌ Password must be at least 8 characters";
-      strengthText.style.color = "#ef4444";
-    } else if(/[A-Z]/.test(pass) && /[0-9]/.test(pass) && /[^A-Za-z0-9]/.test(pass)) {
-      strengthText.innerText = "✅ Strong Password";
-      strengthText.style.color = "#10b981";
-    } else {
-      strengthText.innerText = "⚠️ Medium Password (add numbers/symbols)";
-      strengthText.style.color = "#f59e0b";
     }
   }
 
@@ -442,49 +395,34 @@
     let confirmPass = document.getElementById('authConfirmPass').value;
 
     if(!email || !pass) { alert('Please fill all fields!'); return; }
-
-    if(!isLoginMode) {
-      if(pass.length < 8) { alert('Password must be at least 8 characters long!'); return; }
-      if(pass !== confirmPass) { alert('Passwords do not match!'); return; }
-    }
+    if(!isLoginMode && pass !== confirmPass) { alert('Passwords do not match!'); return; }
 
     db.ref('users/' + email).once('value', (snapshot) => {
       let userData = snapshot.val();
       if(!isLoginMode) {
         if(userData) { alert('User already exists! Please login.'); return; }
-        db.ref('users/' + email).set({ email, pass, date: new Date().toLocaleString() });
+        db.ref('users/' + email).set({ email, pass, tgUserId: currentTgUserId || '', date: new Date().toLocaleString() });
         alert('Signup successful!');
       } else {
         if(!userData || userData.pass !== pass) { alert('Invalid email or password!'); return; }
+        if(currentTgUserId && !userData.tgUserId) {
+          db.ref('users/' + email).update({ tgUserId: currentTgUserId });
+        }
       }
 
       currentUser = email;
       localStorage.setItem('currentUser', currentUser);
-      if(document.getElementById('keepSignedIn').checked) {
-        localStorage.setItem('loginTime', Date.now().toString());
-      } else {
-        localStorage.removeItem('loginTime');
-      }
-
       document.getElementById('authContainer').classList.add('hidden');
       document.getElementById('menuBar').style.display = 'block';
       switchTab('store');
     });
   }
 
-  function forgotPassword() {
-    let email = prompt('Enter your registered email or phone:').trim().replace(/[.#$\[\]]/g, "_");
-    db.ref('users/' + email).once('value', (snapshot) => {
-      let user = snapshot.val();
-      if(user) { alert(`Your password is: ${user.pass}`); }
-      else { alert('User not found!'); }
-    });
-  }
-
   function logoutUser() {
     currentUser = null;
+    currentTgUserId = null;
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('loginTime');
+    localStorage.removeItem('currentTgUserId');
     localStorage.setItem('currentTab', 'auth');
     document.getElementById('menuBar').style.display = 'none';
     document.getElementById('storeTab').classList.add('hidden');
@@ -503,15 +441,14 @@
     document.getElementById('adminTab').classList.add('hidden');
     
     if(tab === 'auth') {
-      document.getElementById('authContainer').classList.remove('hidden');
+      if(!currentUser) document.getElementById('authContainer').classList.remove('hidden');
+      else switchTab('store');
     } else if(tab === 'store') {
-      if(!currentUser) { document.getElementById('authContainer').classList.add('hidden'); return; }
       document.getElementById('storeTab').classList.remove('hidden');
       cancelCheckout();
       loadCategoriesDropdown();
       renderProducts();
     } else if(tab === 'myPurchases') {
-      if(!currentUser) { document.getElementById('authContainer').classList.add('hidden'); return; }
       document.getElementById('purchasesTab').classList.remove('hidden');
       renderBuyerPurchases();
     } else if(tab === 'admin') {
@@ -528,17 +465,20 @@
 
   function loginAdmin() {
     let val = document.getElementById('adminPassInput').value;
-    if(val === adminPassword) {
-      isAdminLoggedIn = true;
-      localStorage.setItem('isAdminLoggedIn', 'true');
-      document.getElementById('adminLogin').classList.add('hidden');
-      document.getElementById('adminDashboard').classList.remove('hidden');
-      loadAdminInventory();
-      loadAdminData();
-      loadPendingOrders();
-    } else {
-      alert('Wrong Admin Password!');
-    }
+    db.ref('admin_config/password').once('value', (snapshot) => {
+      let masterPass = snapshot.val() || '8535'; // Default master password
+      if(val === masterPass) {
+        isAdminLoggedIn = true;
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        document.getElementById('adminLogin').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        loadAdminInventory();
+        loadAdminData();
+        loadPendingOrders();
+      } else {
+        alert('Wrong Admin Password!');
+      }
+    });
   }
 
   function logoutAdmin() {
@@ -551,82 +491,72 @@
 
   function openAdminSubPage(pageId) {
     document.getElementById('adminMainMenuView').classList.add('hidden');
-    document.getElementById('subPage_stockPage').classList.add('hidden');
-    document.getElementById('subPage_approvalsPage').classList.add('hidden');
-    document.getElementById('subPage_logsPage').classList.add('hidden');
-    document.getElementById('subPage_securityPage').classList.add('hidden');
-
+    ['stockPage', 'approvalsPage', 'logsPage', 'securityPage'].forEach(p => {
+      document.getElementById('subPage_' + p).classList.add('hidden');
+    });
     document.getElementById('subPage_' + pageId).classList.remove('hidden');
   }
 
   function closeAdminSubPage() {
-    document.getElementById('subPage_stockPage').classList.add('hidden');
-    document.getElementById('subPage_approvalsPage').classList.add('hidden');
-    document.getElementById('subPage_logsPage').classList.add('hidden');
-    document.getElementById('subPage_securityPage').classList.add('hidden');
+    ['stockPage', 'approvalsPage', 'logsPage', 'securityPage'].forEach(p => {
+      document.getElementById('subPage_' + p).classList.add('hidden');
+    });
     document.getElementById('adminMainMenuView').classList.remove('hidden');
   }
 
-  function toggleAdminPassword() {
-    let p1 = document.getElementById('newPass');
-    let p2 = document.getElementById('confirmPass');
-    let type = p1.type === 'password' ? 'text' : 'password';
-    p1.type = type;
-    p2.type = type;
+  function updateAdminPassword() {
+    let oldP = document.getElementById('oldAdminPass').value;
+    let newP = document.getElementById('newAdminPass').value;
+    let confirmP = document.getElementById('confirmAdminPass').value;
+
+    db.ref('admin_config/password').once('value', (snapshot) => {
+      let masterPass = snapshot.val() || '8535';
+      if(oldP !== masterPass) { alert('Current admin password is incorrect!'); return; }
+      if(!newP) { alert('New password cannot be empty!'); return; }
+      if(newP !== confirmP) { alert('New passwords do not match!'); return; }
+
+      db.ref('admin_config').update({ password: newP }, (err) => {
+        if(err) alert('Failed to update password');
+        else {
+          alert('Master Admin password updated successfully!');
+          document.getElementById('oldAdminPass').value = '';
+          document.getElementById('newAdminPass').value = '';
+          document.getElementById('confirmAdminPass').value = '';
+        }
+      });
+    });
   }
 
-  function updateAdminPassword() {
-    let p1 = document.getElementById('newPass').value;
-    let p2 = document.getElementById('confirmPass').value;
-    if(!p1) { alert('Password cannot be empty'); return; }
-    if(p1 !== p2) { alert('Passwords do not match!'); return; }
-    adminPassword = p1;
-    localStorage.setItem('adminPass', adminPassword);
-    alert('Admin password updated successfully!');
-    document.getElementById('newPass').value = '';
-    document.getElementById('confirmPass').value = '';
+  function saveBotToken() {
+    let token = document.getElementById('botTokenInput').value.trim();
+    if(!token) { alert('Please enter Bot Token!'); return; }
+    db.ref('admin_config/botToken').set(token, (err) => {
+      if(err) alert('Failed to save token');
+      else alert('Telegram Bot Token saved successfully!');
+    });
   }
 </script>
 <script>
-  function toggleStockMode() {
-    let mode = document.getElementById('stockAddMode').value;
-    document.getElementById('bulkStockDiv').classList.add('hidden');
-    document.getElementById('singleTextDiv').classList.add('hidden');
-    document.getElementById('singleFileDiv').classList.add('hidden');
-
-    if(mode === 'bulk') document.getElementById('bulkStockDiv').classList.remove('hidden');
-    else if(mode === 'single_text') document.getElementById('singleTextDiv').classList.remove('hidden');
-    else if(mode === 'single_file') document.getElementById('singleFileDiv').classList.remove('hidden');
-  }
-
   function saveCategoryMeta() {
     let catName = document.getElementById('catNameInput').value.trim();
     let title = document.getElementById('catTitleInput').value.trim();
     let price = document.getElementById('catPriceInput').value.trim();
 
-    if(!catName || !price || !title) { alert('Please fill category name, default title and price!'); return; }
+    if(!catName || !price || !title) { alert('Please fill all fields!'); return; }
 
-    db.ref('category_meta/' + catName).set({ name: catName, title, price }, (error) => {
-      if(error) { alert('Failed to save category meta.'); }
-      else {
-        // Also update all available products in this category to new price
-        db.ref('products').once('value', (snapshot) => {
-          let products = snapshot.val();
-          if(products) {
-            Object.keys(products).forEach(k => {
-              if(products[k].category === catName && products[k].status === 'available') {
-                db.ref('products/' + k).update({ price: price });
-              }
-            });
-          }
-        });
-
-        alert(`Category [${catName}] pricing & title saved and updated successfully!`);
-        document.getElementById('catNameInput').value = '';
-        document.getElementById('catTitleInput').value = '';
-        document.getElementById('catPriceInput').value = '';
-        loadAdminInventory();
-      }
+    db.ref('category_meta/' + catName).set({ name: catName, title, price }, () => {
+      db.ref('products').once('value', (snapshot) => {
+        let products = snapshot.val();
+        if(products) {
+          Object.keys(products).forEach(k => {
+            if(products[k].category === catName && products[k].status === 'available') {
+              db.ref('products/' + k).update({ price: price });
+            }
+          });
+        }
+      });
+      alert(`Category [${catName}] saved successfully!`);
+      loadAdminInventory();
     });
   }
 
@@ -636,69 +566,29 @@
 
     db.ref('category_meta/' + category).once('value', (snapshot) => {
       let meta = snapshot.val();
-      if(!meta) {
-        alert('Please first save category pricing & title in the category manager above!');
-        return;
-      }
+      if(!meta) { alert('Please first save category pricing & title!'); return; }
 
-      let mode = document.getElementById('stockAddMode').value;
-      if(mode === 'bulk') {
-        let bulkText = document.getElementById('bulkStockData').value.trim();
-        if(!bulkText) { alert('Please paste bulk items data!'); return; }
-        let lines = bulkText.split('\n').filter(l => l.trim() !== '');
-        if(lines.length === 0) { alert('No valid lines found!'); return; }
+      let bulkText = document.getElementById('bulkStockData').value.trim();
+      if(!bulkText) { alert('Please paste items data!'); return; }
+      let lines = bulkText.split('\n').filter(l => l.trim() !== '');
 
-        lines.forEach((line, index) => {
-          let itemName = `${meta.title} #${index + 1}`;
-          let newRef = db.ref('products').push();
-          newRef.set({
-            id: newRef.key,
-            category: category,
-            name: itemName,
-            price: meta.price,
-            content: line.trim(),
-            status: 'available',
-            date: new Date().toLocaleString()
-          });
+      lines.forEach((line, index) => {
+        let itemName = `${meta.title} #${index + 1}`;
+        let newRef = db.ref('products').push();
+        newRef.set({
+          id: newRef.key,
+          category: category,
+          name: itemName,
+          price: meta.price,
+          content: line.trim(),
+          status: 'available',
+          date: new Date().toLocaleString()
         });
-        alert(`Successfully added ${lines.length} stock items to [${category}] at ₹${meta.price}!`);
-        document.getElementById('bulkStockData').value = '';
-        loadAdminInventory();
-
-      } else if(mode === 'single_text') {
-        let textContent = document.getElementById('singleTextData').value.trim();
-        if(!textContent) { alert('Please paste text or JSON content!'); return; }
-        saveProductToDB(category, meta.title, meta.price, textContent);
-        document.getElementById('singleTextData').value = '';
-
-      } else if(mode === 'single_file') {
-        let fileInput = document.getElementById('singleFileInput');
-        if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
-        let file = fileInput.files[0];
-        let reader = new FileReader();
-        reader.onload = function(e) {
-          let content = e.target.result;
-          saveProductToDB(category, meta.title, meta.price, content);
-          fileInput.value = '';
-        };
-        reader.readAsText(file);
-      }
+      });
+      alert(`Successfully added ${lines.length} stock items!`);
+      document.getElementById('bulkStockData').value = '';
+      loadAdminInventory();
     });
-  }
-
-  function saveProductToDB(category, name, price, content) {
-    let newRef = db.ref('products').push();
-    newRef.set({ 
-      id: newRef.key, 
-      category, 
-      name, 
-      price, 
-      content, 
-      status: 'available',
-      date: new Date().toLocaleString() 
-    });
-    alert('Item added successfully to stock!');
-    loadAdminInventory();
   }
 
   function loadCategoriesDropdown() {
@@ -707,16 +597,11 @@
       let currentVal = filter.value;
       filter.innerHTML = '<option value="all">All Categories</option>';
       let categories = new Set();
-      
       let products = snapshot.val();
       if(products) {
-        Object.keys(products).forEach(k => {
-          if(products[k].category) categories.add(products[k].category);
-        });
+        Object.keys(products).forEach(k => { if(products[k].category) categories.add(products[k].category); });
       }
-      categories.forEach(cat => {
-        filter.innerHTML += `<option value="${cat}">${cat}</option>`;
-      });
+      categories.forEach(cat => { filter.innerHTML += `<option value="${cat}">${cat}</option>`; });
       filter.value = currentVal;
     });
   }
@@ -732,17 +617,15 @@
       let count = 0;
       Object.keys(products).forEach((key) => {
         let p = products[key];
-        if(selectedCat === 'all' || p.category === selectedCat) {
-          if(p.status === 'available') {
-            count++;
-            list.innerHTML += `
-              <div class="product-card" id="prod_card_${key}">
-                <h4 style="margin:0 0 5px 0; color:#fbbf24; font-size:18px;">${p.name}</h4>
-                <p style="margin:0 0 12px 0; font-size:14px;"><b>Category:</b> ${p.category} | <span style="color:#ff3366; font-size:16px; font-weight:bold;">₹${p.price}</span></p>
-                <button onclick="startCheckout('${key}', '${p.name}', '${p.price}')" style="background:linear-gradient(135deg, #059669, #10b981);">🛒 Buy Now</button>
-              </div>
-            `;
-          }
+        if((selectedCat === 'all' || p.category === selectedCat) && p.status === 'available') {
+          count++;
+          list.innerHTML += `
+            <div class="product-card">
+              <h4 style="margin:0 0 5px 0; color:#fbbf24; font-size:18px;">${p.name}</h4>
+              <p style="margin:0 0 12px 0; font-size:14px;"><b>Category:</b> ${p.category} | <span style="color:#ff3366; font-size:16px; font-weight:bold;">₹${p.price}</span></p>
+              <button onclick="startCheckout('${key}', '${p.name}', '${p.price}')" style="background:linear-gradient(135deg, #059669, #10b981);">🛒 Buy Now</button>
+            </div>
+          `;
         }
       });
       if(count === 0) { list.innerHTML = '<p>No items available right now.</p>'; }
@@ -751,24 +634,29 @@
 
   function startCheckout(key, name, price) {
     activeCheckoutProduct = { key, name, price };
-    
-    // Hide product list and category filter, show checkout view
     document.getElementById('productList').classList.add('hidden');
     document.getElementById('categoryFilter').parentElement.classList.add('hidden');
-    
-    let checkoutView = document.getElementById('checkoutView');
-    checkoutView.classList.remove('hidden');
+    document.getElementById('checkoutView').classList.remove('hidden');
 
     document.getElementById('checkoutTitle').innerText = `Checkout: ${name}`;
-    document.getElementById('checkoutDetails').innerHTML = `<b>Category Item:</b> ${name}<br><b>Total Price:</b> <span style="color:#ff3366; font-size:16px; font-weight:bold;">₹${price}</span>`;
+    document.getElementById('checkoutDetails').innerHTML = `<b>Item:</b> ${name}<br><b>Price:</b> <span style="color:#ff3366; font-size:16px; font-weight:bold;">₹${price}</span>`;
 
     let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${price}&cu=INR`;
     let qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
 
     document.getElementById('checkoutQrImg').src = qrApi;
     document.getElementById('checkoutQrDownload').href = qrApi;
-    document.getElementById('checkoutUpiLink').href = upiString;
     document.getElementById('checkoutUtrInput').value = '';
+  }
+
+  function triggerUpiPayment() {
+    if(!activeCheckoutProduct) return;
+    let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${activeCheckoutProduct.price}&cu=INR`;
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.openInvoice ? window.Telegram.WebApp.openInvoice(upiString) : window.open(upiString, '_blank');
+    } else {
+      window.location.href = upiString;
+    }
   }
 
   function cancelCheckout() {
@@ -781,21 +669,20 @@
   function confirmCheckoutOrder() {
     if(!activeCheckoutProduct) return;
     let utr = document.getElementById('checkoutUtrInput').value.trim();
-    if(!utr) { alert('Please enter your 12-digit UTR number!'); return; }
+    if(!utr) { alert('Please enter 12-digit UTR number!'); return; }
 
     let { key, name, price } = activeCheckoutProduct;
-
     db.ref('products/' + key).once('value', (snapshot) => {
       let p = snapshot.val();
-      if(!p || p.status !== 'available') { alert('Item is out of stock or already sold!'); cancelCheckout(); renderProducts(); return; }
+      if(!p || p.status !== 'available') { alert('Item sold out!'); cancelCheckout(); renderProducts(); return; }
 
       db.ref('products/' + key).update({ status: 'pending' });
-
       let purchaseRef = db.ref('purchases').push();
       purchaseRef.set({
         id: purchaseRef.key,
         productKey: key,
         user: currentUser,
+        tgUserId: currentTgUserId || '',
         productName: name,
         price: price,
         utr: utr,
@@ -804,7 +691,7 @@
         date: new Date().toLocaleString()
       });
 
-      alert('Order submitted successfully! Admin will verify your UTR and unlock your item shortly.');
+      alert('Order submitted successfully! Admin will verify UTR shortly.');
       cancelCheckout();
       switchTab('myPurchases');
     });
@@ -816,7 +703,7 @@
       pList.innerHTML = '';
       let purchases = snapshot.val();
       if(!purchases) { 
-        pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders for verification.</p>'; 
+        pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders.</p>'; 
         document.getElementById('pendingBadgeCount').innerText = '0';
         return; 
       }
@@ -828,12 +715,11 @@
           pendingCount++;
           pList.innerHTML += `
             <div style="background:rgba(0,0,0,0.4); padding:12px; margin:8px 0; border-radius:8px; border-left:4px solid #d97706; font-size:13px;">
-              <b>Buyer:</b> ${item.user}<br>
+              <b>Buyer:</b> ${item.user} (TG ID:${item.tgUserId || 'N/A'})<br>
               <b>Item:</b> ${item.productName} (₹${item.price})<br>
-              <b>UTR Number:</b> <span style="color:#38bdf8; font-weight:bold; font-size:14px;">${item.utr}</span><br>
-              <b>Date:</b> ${item.date}<br>
+              <b>UTR:</b> <span style="color:#38bdf8; font-weight:bold; font-size:14px;">${item.utr}</span><br>
               <div style="margin-top:10px; display:flex; gap:8px;">
-                <button onclick="approveOrder('${item.id}', '${item.productKey}')" style="background:#059669; padding:6px 12px; font-size:12px; margin:0; width:auto;">✅ Verify & Approve</button>
+                <button onclick="approveOrder('${item.id}', '${item.productKey}', '${item.tgUserId}', encodeURIComponent(\`${item.content}\`))" style="background:#059669; padding:6px 12px; font-size:12px; margin:0; width:auto;">✅ Verify & Auto-Deliver to Telegram</button>
                 <button onclick="rejectOrder('${item.id}', '${item.productKey}')" style="background:#dc2626; padding:6px 12px; font-size:12px; margin:0; width:auto;">❌ Reject</button>
               </div>
             </div>
@@ -841,23 +727,39 @@
         }
       });
       document.getElementById('pendingBadgeCount').innerText = pendingCount;
-      if(pendingCount === 0) { pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders for verification.</p>'; }
+      if(pendingCount === 0) { pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders.</p>'; }
     });
   }
 
-  function approveOrder(purchaseId, productKey) {
+  function approveOrder(purchaseId, productKey, tgUserId, encodedContent) {
+    let content = decodeURIComponent(encodedContent);
     db.ref('purchases/' + purchaseId).update({ status: 'approved' });
     db.ref('products/' + productKey).update({ status: 'sold' });
-    alert('Payment verified and order approved successfully!');
-    loadPendingOrders();
-    loadAdminInventory();
+
+    // Send via Telegram Bot API if tgUserId and botToken exist
+    db.ref('admin_config').once('value', (snapshot) => {
+      let config = snapshot.val() || {};
+      if(config.botToken && tgUserId) {
+        let msg = encodeURIComponent(`🎉 Your order has been approved!\n\n📦 *Product:* ${purchaseId}\n🔑 *Digital Content / JSON:*\n\`\`\`\n${content}\n\`\`\``);
+        fetch(`https://api.telegram.org/bot${config.botToken}/sendMessage?chat_id=${tgUserId}&text=${msg}&parse_mode=Markdown`)
+          .then(res => res.json())
+          .then(data => {
+            if(data.ok) alert('Order approved & delivered directly to buyer Telegram chat!');
+            else alert('Order approved in app, but Telegram delivery failed (check Bot token & chat ID).');
+          }).catch(() => alert('Order approved successfully!'));
+      } else {
+        alert('Order approved successfully!');
+      }
+      loadPendingOrders();
+      loadAdminInventory();
+    });
   }
 
   function rejectOrder(purchaseId, productKey) {
-    if(confirm('Are you sure you want to reject this payment?')) {
+    if(confirm('Reject this payment?')) {
       db.ref('purchases/' + purchaseId).remove();
       db.ref('products/' + productKey).update({ status: 'available' });
-      alert('Order rejected and item restocked.');
+      alert('Order rejected and restocked.');
       loadPendingOrders();
       loadAdminInventory();
     }
@@ -875,48 +777,20 @@
         let item = purchases[key];
         if(item.user === currentUser) {
           count++;
-          let statusBadge = '';
-          let deliveryContent = '';
+          let statusBadge = item.status === 'pending' ? '<span class="badge badge-pending">Verification Pending</span>' : '<span class="badge">Approved & Unlocked</span>';
+          let deliveryContent = item.status === 'pending' ? 
+            '<p style="font-size:13px; color:#fbbf24; margin-top:8px;">⏳ Admin is verifying UTR. Content will also be sent to your Telegram chat!</p>' :
+            `<div style="background:rgba(0,0,0,0.6); padding:12px; border-radius:8px; margin-top:10px;"><button onclick="copyToClipboard(\`${item.content.replace(/"/g, '&quot;')}\`)" class="copy-btn">📋 Copy Content</button><pre style="white-space:pre-wrap; word-break:break-all; color:#38bdf8; font-size:12px; margin-top:8px;">${item.content}</pre></div>`;
 
-          if(item.status === 'pending') {
-            statusBadge = '<span class="badge badge-pending">Verification Pending</span>';
-            deliveryContent = '<p style="font-size:13px; color:#fbbf24; margin-top:8px;">⏳ Admin is verifying your UTR payment. Your delivery content will appear here once approved.</p>';
-          } else if(item.status === 'approved') {
-            statusBadge = '<span class="badge">Approved & Unlocked</span>';
-            let safeContent = item.content.replace(/"/g, '&quot;');
-            deliveryContent = `
-              <div style="background:rgba(0,0,0,0.6); padding:12px; border-radius:8px; margin-top:10px; border:1px solid rgba(56, 189, 248, 0.3);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                  <b style="font-size:12px; color:#38bdf8;">Digital Delivery (Clean Text / JSON):</b>
-                  <button onclick="copyToClipboard('${safeContent}')" class="copy-btn">📋 One-Click Copy</button>
-                </div>
-                <pre id="content_${item.id}" style="white-space:pre-wrap; word-break:break-all; margin:0; color:#38bdf8; font-family:monospace; font-size:12px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">${item.content}</pre>
-              </div>
-            `;
-          }
-
-          list.innerHTML += `
-            <div class="history-item">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h4 style="margin:0; color:#fbbf24;">${item.productName} - ₹${item.price}</h4>
-                ${statusBadge}
-              </div>
-              <p style="margin:6px 0; font-size:13px; color:#94a3b8;">UTR: ${item.utr} | Date: ${item.date}</p>
-              ${deliveryContent}
-            </div>
-          `;
+          list.innerHTML += `<div class="history-item"><div style="display:flex; justify-content:space-between; align-items:center;"><h4 style="margin:0; color:#fbbf24;">${item.productName} - ₹${item.price}</h4>${statusBadge}</div><p style="margin:6px 0; font-size:13px; color:#94a3b8;">UTR: ${item.utr}</p>${deliveryContent}</div>`;
         }
       });
-      if(count === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
+      if(count === 0) list.innerHTML = '<p>No purchases yet.</p>';
     });
   }
 
   function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Copied to clipboard successfully!');
-    }).catch(err => {
-      alert('Failed to copy text!');
-    });
+    navigator.clipboard.writeText(text).then(() => alert('Copied!'));
   }
 
   function loadAdminInventory() {
@@ -926,98 +800,36 @@
         let cList = document.getElementById('adminCategoryList');
         cList.innerHTML = '';
         let products = snapshot.val();
-        if(!products && Object.keys(metaMap).length === 0) { cList.innerHTML = '<p>No categories or stock added yet.</p>'; return; }
-
         let categories = {};
-        Object.keys(metaMap).forEach(cat => {
-          categories[cat] = { price: metaMap[cat].price, title: metaMap[cat].title, available: 0, sold: 0, pending: 0, items: [] };
-        });
-
+        Object.keys(metaMap).forEach(cat => { categories[cat] = { price: metaMap[cat].price, items: [] }; });
         if(products) {
-          Object.keys(products).forEach((key) => {
+          Object.keys(products).forEach(key => {
             let p = products[key];
             let cat = p.category || 'General';
-            if(!categories[cat]) categories[cat] = { price: p.price, title: p.name, available: 0, sold: 0, pending: 0, items: [] };
+            if(!categories[cat]) categories[cat] = { price: p.price, items: [] };
             categories[cat].items.push({ id: key, ...p });
-            if(p.status === 'sold') categories[cat].sold++;
-            else if(p.status === 'pending') categories[cat].pending++;
-            else categories[cat].available++;
           });
         }
-
         Object.keys(categories).forEach(cat => {
           let data = categories[cat];
           let itemsHtml = '';
           data.items.forEach(item => {
-            let badge = '<span class="badge">Available</span>';
-            if(item.status === 'sold') badge = '<span class="badge badge-sold">Sold</span>';
-            else if(item.status === 'pending') badge = '<span class="badge badge-pending">Pending</span>';
-
-            itemsHtml += `
-              <div style="background:rgba(255,255,255,0.03); padding:8px; margin:6px 0; border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
-                <div><b>${item.name}</b> (₹${item.price}) ${badge}</div>
-                <button onclick="deleteProduct('${item.id}')" style="width:auto; background:#dc2626; padding:4px 8px; margin:0; font-size:11px;">Delete</button>
-              </div>
-            `;
+            let badge = item.status === 'sold' ? '<span class="badge badge-sold">Sold</span>' : (item.status === 'pending' ? '<span class="badge badge-pending">Pending</span>' : '<span class="badge">Available</span>');
+            itemsHtml += `<div style="padding:6px; font-size:13px; display:flex; justify-content:space-between; align-items:center;"><b>${item.name}</b> (₹${item.price}) ${badge} <button onclick="db.ref('products/${item.id}').remove(); loadAdminInventory();" style="width:auto; background:#dc2626; padding:2px 6px; font-size:10px;">Del</button></div>`;
           });
-
-          cList.innerHTML += `
-            <div class="category-card">
-              <h4 style="margin:0 0 5px 0; color:#ff3366;">📁 ${cat} <span style="font-size:12px; color:#fbbf24;">(Price: ₹${data.price || 'N/A'})</span></h4>
-              <p style="margin:0 0 10px 0; font-size:13px; color:#cbd5e1;">Available: <b>${data.available}</b> | Pending: <b>${data.pending}</b> | Sold: <b>${data.sold}</b></p>
-              ${itemsHtml}
-              <button onclick="document.getElementById('targetCategorySelect').value='${cat}'; openAdminSubPage('stockPage');" style="margin-top:8px; background:#0284c7; font-size:12px; padding:6px;">⚡ Add Stock to ${cat}</button>
-            </div>
-          `;
+          cList.innerHTML += `<div class="category-card"><h4 style="margin:0; color:#ff3366;">📁 ${cat} (₹${data.price})</h4>${itemsHtml}</div>`;
         });
       });
     });
-  }
-
-  function deleteProduct(key) {
-    if(confirm('Are you sure you want to delete this item?')) {
-      db.ref('products/' + key).remove();
-      alert('Item deleted successfully!');
-      loadAdminInventory();
-    }
   }
 
   function loadAdminData() {
-    db.ref('users').once('value', (snapshot) => {
+    db.ref('users').once('value', (s) => {
       let uList = document.getElementById('adminUsersList');
       uList.innerHTML = '<h5>Registered Users:</h5>';
-      let users = snapshot.val();
-      if(!users) { uList.innerHTML += '<p>No users registered.</p>'; }
-      else {
-        Object.keys(users).forEach((key) => {
-          let u = users[key];
-          uList.innerHTML += `<div style="font-size:13px; margin:4px 0; color:#cbd5e1;">👤 ${u.email} (Joined: ${u.date})</div>`;
-        });
-      }
+      let users = s.val();
+      if(users) Object.keys(users).forEach(k => uList.innerHTML += `<div style="font-size:12px;">👤 ${users[k].email} (TG ID: ${users[k].tgUserId || 'N/A'})</div>`);
     });
-
-    db.ref('purchases').once('value', (snapshot) => {
-      let sList = document.getElementById('adminSalesHistory');
-      sList.innerHTML = '<h5>All Sales Logs:</h5>';
-      let purchases = snapshot.val();
-      if(!purchases) { sList.innerHTML += '<p>No sales recorded.</p>'; return; }
-
-      Object.keys(purchases).forEach((key) => {
-        let item = purchases[key];
-        sList.innerHTML += `
-          <div style="background:rgba(0,0,0,0.4); padding:10px; margin:8px 0; border-radius:6px; font-size:13px; border-left:3px solid #059669;">
-            <b>Buyer:</b> ${item.user}<br><b>Item:</b> ${item.productName} (₹${item.price})<br><b>UTR:</b> <span style="color:#38bdf8;">${item.utr}</span><br><b>Status:</b> ${item.status}<br><b>Date:</b> ${item.date}
-          </div>
-        `;
-      });
-    });
-  }
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('SW Registered'))
-      .catch((e) => console.log('SW failed', e));
   }
 </script>
 </body>
