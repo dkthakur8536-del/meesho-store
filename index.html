@@ -185,8 +185,8 @@
         <p style="margin:0 0 8px 0; font-size:13px; color:#cbd5e1;">Scan QR or pay via UPI App:</p>
         <img id="checkoutQrImg" src="" alt="Payment QR" style="border-radius:10px; border:2px solid white; width:160px; height:160px; background:white; padding:5px;">
         <div style="margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-          <a id="checkoutQrDownload" href="" download="Payment_QR.png" target="_blank"><button style="padding:6px 12px; font-size:12px; background:#475569; width:auto;">📥 Download QR</button></a>
-          <button onclick="triggerUpiPayment()" style="padding:6px 12px; font-size:12px; background:#059669; width:auto; margin:0;">⚡ Pay via UPI App</button>
+          <button onclick="downloadQrCode()" style="padding:6px 12px; font-size:12px; background:#475569; width:auto; margin:0;">📥 Download QR</button>
+          <a id="checkoutUpiLink" href="" style="text-decoration:none;"><button style="padding:6px 12px; font-size:12px; background:#059669; width:auto; margin:0; border:none;">⚡ Pay via UPI App</button></a>
         </div>
       </div>
 
@@ -245,7 +245,7 @@
         <div class="admin-menu-card" onclick="openAdminSubPage('securityPage')">
           <div>
             <h4 style="margin:0; color:#f43f5e;">🔒 Security & Bot Settings</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Change Master Password (Requires Old Pass) & Telegram Bot Token</p>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Change Master Password & Telegram Bot Token</p>
           </div>
           <span style="font-size:20px; color:#f43f5e;">➔</span>
         </div>
@@ -308,7 +308,7 @@
         </div>
         <div class="admin-section" style="margin-top:15px;">
           <h4>🤖 Telegram Bot Token for Auto-Delivery</h4>
-          <input type="text" id="botTokenInput" placeholder="Enter Telegram Bot Token (e.g., 123456:ABC-DEF...)">
+          <input type="text" id="botTokenInput" placeholder="Enter Telegram Bot Token">
           <button onclick="saveBotToken()" style="background:#0284c7;">Save Bot Token</button>
         </div>
       </div>
@@ -340,7 +340,6 @@
   const merchantUpiId = "9870815480@slc";
   let activeCheckoutProduct = null;
 
-  // Telegram WebApp Initialization
   if (window.Telegram && window.Telegram.WebApp) {
     window.Telegram.WebApp.ready();
     window.Telegram.WebApp.expand();
@@ -466,7 +465,7 @@
   function loginAdmin() {
     let val = document.getElementById('adminPassInput').value;
     db.ref('admin_config/password').once('value', (snapshot) => {
-      let masterPass = snapshot.val() || '8535'; // Default master password
+      let masterPass = snapshot.val() || '8535';
       if(val === masterPass) {
         isAdminLoggedIn = true;
         localStorage.setItem('isAdminLoggedIn', 'true');
@@ -645,18 +644,28 @@
     let qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
 
     document.getElementById('checkoutQrImg').src = qrApi;
-    document.getElementById('checkoutQrDownload').href = qrApi;
+    document.getElementById('checkoutUpiLink').href = upiString;
     document.getElementById('checkoutUtrInput').value = '';
   }
 
-  function triggerUpiPayment() {
-    if(!activeCheckoutProduct) return;
-    let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${activeCheckoutProduct.price}&cu=INR`;
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.openInvoice ? window.Telegram.WebApp.openInvoice(upiString) : window.open(upiString, '_blank');
-    } else {
-      window.location.href = upiString;
-    }
+  // Direct Blob Download for QR Code
+  function downloadQrCode() {
+    let qrImgSrc = document.getElementById('checkoutQrImg').src;
+    fetch(qrImgSrc)
+      .then(response => response.blob())
+      .then(blob => {
+        let blobUrl = window.URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'Meesho_Payment_QR.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+      })
+      .catch(() => {
+        window.open(qrImgSrc, '_blank');
+      });
   }
 
   function cancelCheckout() {
@@ -736,7 +745,6 @@
     db.ref('purchases/' + purchaseId).update({ status: 'approved' });
     db.ref('products/' + productKey).update({ status: 'sold' });
 
-    // Send via Telegram Bot API if tgUserId and botToken exist
     db.ref('admin_config').once('value', (snapshot) => {
       let config = snapshot.val() || {};
       if(config.botToken && tgUserId) {
@@ -745,7 +753,7 @@
           .then(res => res.json())
           .then(data => {
             if(data.ok) alert('Order approved & delivered directly to buyer Telegram chat!');
-            else alert('Order approved in app, but Telegram delivery failed (check Bot token & chat ID).');
+            else alert('Order approved in app, but Telegram delivery failed.');
           }).catch(() => alert('Order approved successfully!'));
       } else {
         alert('Order approved successfully!');
