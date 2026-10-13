@@ -205,7 +205,7 @@
     </div>
     
     <div id="adminDashboard" class="hidden">
-      <!-- Clean Menu Buttons (Multi-Page Sub-Views) -->
+      <!-- Clean Menu Buttons -->
       <div id="adminMainMenuView">
         <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Select a management module:</p>
         
@@ -227,8 +227,8 @@
 
         <div class="admin-menu-card" onclick="openAdminSubPage('botPage')">
           <div>
-            <h4 style="margin:0; color:#a855f7;">🤖 Telegram Bot Control</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Start/Stop automated number buying bot</p>
+            <h4 style="margin:0; color:#a855f7;">🤖 Telegram Bot Control & Live Monitor</h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Start/Stop bot & view live bought numbers & activity</p>
           </div>
           <span style="font-size:20px; color:#a855f7;">➔</span>
         </div>
@@ -275,7 +275,7 @@
           </select>
 
           <div id="bulkStockDiv">
-            <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line will be added as 1 item automatically)..." style="height:90px; font-family:monospace;"></textarea>
+            <textarea id="bulkStockData" placeholder="Paste multiple items here..." style="height:90px; font-family:monospace;"></textarea>
           </div>
           <div id="singleTextDiv" class="hidden">
             <textarea id="singleTextData" placeholder="Paste single JSON or text..." style="height:90px; font-family:monospace;"></textarea>
@@ -302,7 +302,7 @@
         </div>
       </div>
 
-      <!-- SUB PAGE 3: TELEGRAM BOT CONTROL -->
+      <!-- SUB PAGE 3: TELEGRAM BOT CONTROL & LIVE MONITOR -->
       <div id="subPage_botPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section" style="border: 1px solid #a855f7;">
@@ -313,6 +313,12 @@
             <button onclick="setBotStatus(false)" style="background:#dc2626;">🛑 Stop Bot</button>
           </div>
           <p id="botStatusText" style="margin-top:10px; font-size:13px; color:#fbbf24;">Status: Checking...</p>
+          
+          <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0;">
+          <h5 style="color:#38bdf8; margin:0 0 8px 0;">📡 Live Bot Activity & Bought Numbers:</h5>
+          <div id="liveBotActivityBox" style="background:rgba(0,0,0,0.6); padding:14px; border-radius:8px; font-family:monospace; font-size:13px; color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);">
+            Waiting for bot activity...
+          </div>
         </div>
       </div>
 
@@ -344,7 +350,6 @@
     </div>
   </div>
 </div>
-
 <!-- Firebase SDK CDN -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -364,7 +369,7 @@
 
   let adminPassword = localStorage.getItem('adminPass') || '8535';
   let currentUser = localStorage.getItem('currentUser') || null;
-  let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+  let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn'] === 'true';
   let currentTab = localStorage.getItem('currentTab') || 'auth';
   let isLoginMode = false;
   const merchantUpiId = "9870815480@slc";
@@ -384,7 +389,7 @@
       document.getElementById('menuBar').style.display = 'block';
     }
     
-    if (currentTab === 'admin' && isAdminLoggedIn) {
+    if (currentTab === 'admin' && localStorage.getItem('isAdminLoggedIn') === 'true') {
       document.getElementById('adminTab').classList.remove('hidden');
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminDashboard').classList.remove('hidden');
@@ -515,7 +520,7 @@
       renderBuyerPurchases();
     } else if(tab === 'admin') {
       document.getElementById('adminTab').classList.remove('hidden');
-      if (isAdminLoggedIn) {
+      if (localStorage.getItem('isAdminLoggedIn') === 'true') {
         document.getElementById('adminLogin').classList.add('hidden');
         document.getElementById('adminDashboard').classList.remove('hidden');
         loadAdminInventory();
@@ -528,7 +533,6 @@
   function loginAdmin() {
     let val = document.getElementById('adminPassInput').value;
     if(val === adminPassword) {
-      isAdminLoggedIn = true;
       localStorage.setItem('isAdminLoggedIn', 'true');
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminDashboard').classList.remove('hidden');
@@ -541,7 +545,6 @@
   }
 
   function logoutAdmin() {
-    isAdminLoggedIn = false;
     localStorage.removeItem('isAdminLoggedIn');
     document.getElementById('adminLogin').classList.remove('hidden');
     document.getElementById('adminDashboard').classList.add('hidden');
@@ -577,7 +580,7 @@
       if(error) {
         alert('Failed to update bot status!');
       } else {
-        alert(status ? 'Bot started successfully! Script will begin buying.' : 'Bot stopped successfully!');
+        alert(status ? 'Bot started successfully!' : 'Bot stopped successfully!');
         checkBotStatusUI();
       }
     });
@@ -593,6 +596,20 @@
         } else {
           statusText.innerHTML = 'Status: <span style="color:#ef4444; font-weight:bold;">Stopped (Idle 🛑)</span>';
         }
+      }
+    });
+
+    // Real-time live status and bought numbers listener from Python bot
+    db.ref('bot_live_status').on('value', (snapshot) => {
+      let liveData = snapshot.val();
+      let activityBox = document.getElementById('liveBotActivityBox');
+      if(activityBox && liveData) {
+        activityBox.innerHTML = `
+          <b>🚀 Current Activity:</b> ${liveData.last_activity || 'Idle'}<br>
+          <b>📲 Bought Number:</b> <span style="color:#fbbf24; font-size:15px; font-weight:bold;">${liveData.phone || 'None'}</span><br>
+          <b>🌐 SMS Provider:</b> ${liveData.site || 'N/A'}<br>
+          <b>⚡ Status:</b> ${liveData.is_buying ? 'Active Buying' : 'Idle'}
+        `;
       }
     });
   }
@@ -811,8 +828,7 @@
       switchTab('myPurchases');
     });
   }
-</script>
-<script>
+
   function loadPendingOrders() {
     db.ref('purchases').once('value', (snapshot) => {
       let pList = document.getElementById('adminPendingOrders');
