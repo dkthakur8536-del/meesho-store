@@ -205,7 +205,7 @@
     </div>
     
     <div id="adminDashboard" class="hidden">
-      <!-- Clean Menu Buttons (Multi-Page Navigation) -->
+      <!-- Clean Menu Buttons (Multi-Page Sub-Views) -->
       <div id="adminMainMenuView">
         <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Select a management module:</p>
         
@@ -223,6 +223,14 @@
             <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Verify UTRs and approve buyer orders</p>
           </div>
           <span style="font-size:20px; color:#fbbf24;">➔</span>
+        </div>
+
+        <div class="admin-menu-card" onclick="openAdminSubPage('botPage')">
+          <div>
+            <h4 style="margin:0; color:#a855f7;">🤖 Telegram Bot Control</h4>
+            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Start/Stop automated number buying bot</p>
+          </div>
+          <span style="font-size:20px; color:#a855f7;">➔</span>
         </div>
 
         <div class="admin-menu-card" onclick="openAdminSubPage('logsPage')">
@@ -244,7 +252,7 @@
         <button onclick="logoutAdmin()" style="background:#dc2626; margin-top:25px;">Logout Admin</button>
       </div>
 
-      <!-- SUB PAGE 1: CATEGORY & STOCK MANAGEMENT -->
+      <!-- SUB PAGE 1: STOCK MANAGEMENT -->
       <div id="subPage_stockPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
@@ -294,7 +302,21 @@
         </div>
       </div>
 
-      <!-- SUB PAGE 3: USERS & SALES LOGS -->
+      <!-- SUB PAGE 3: TELEGRAM BOT CONTROL -->
+      <div id="subPage_botPage" class="hidden">
+        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
+        <div class="admin-section" style="border: 1px solid #a855f7;">
+          <h4 style="color:#a855f7;">🤖 Telegram Bot Management</h4>
+          <p style="font-size:13px; color:#cbd5e1;">App se direct bot ko start ya stop karein:</p>
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <button onclick="setBotStatus(true)" style="background:#059669;">🚀 Start Bot</button>
+            <button onclick="setBotStatus(false)" style="background:#dc2626;">🛑 Stop Bot</button>
+          </div>
+          <p id="botStatusText" style="margin-top:10px; font-size:13px; color:#fbbf24;">Status: Checking...</p>
+        </div>
+      </div>
+
+      <!-- SUB PAGE 4: USERS & SALES LOGS -->
       <div id="subPage_logsPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
@@ -304,7 +326,7 @@
         </div>
       </div>
 
-      <!-- SUB PAGE 4: SECURITY SETTINGS -->
+      <!-- SUB PAGE 5: SECURITY SETTINGS -->
       <div id="subPage_securityPage" class="hidden">
         <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
         <div class="admin-section">
@@ -322,6 +344,7 @@
     </div>
   </div>
 </div>
+
 <!-- Firebase SDK CDN -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -482,7 +505,7 @@
     if(tab === 'auth') {
       document.getElementById('authContainer').classList.remove('hidden');
     } else if(tab === 'store') {
-      if(!currentUser) { document.getElementById('authContainer').classList.add('hidden'); return; }
+      if(!currentUser) { document.getElementById('authContainer').classList.remove('hidden'); return; }
       document.getElementById('storeTab').classList.remove('hidden');
       loadCategoriesDropdown();
       renderProducts();
@@ -529,18 +552,49 @@
     document.getElementById('adminMainMenuView').classList.add('hidden');
     document.getElementById('subPage_stockPage').classList.add('hidden');
     document.getElementById('subPage_approvalsPage').classList.add('hidden');
+    document.getElementById('subPage_botPage').classList.add('hidden');
     document.getElementById('subPage_logsPage').classList.add('hidden');
     document.getElementById('subPage_securityPage').classList.add('hidden');
 
     document.getElementById('subPage_' + pageId).classList.remove('hidden');
+    
+    if(pageId === 'botPage') {
+      checkBotStatusUI();
+    }
   }
 
   function closeAdminSubPage() {
     document.getElementById('subPage_stockPage').classList.add('hidden');
     document.getElementById('subPage_approvalsPage').classList.add('hidden');
+    document.getElementById('subPage_botPage').classList.add('hidden');
     document.getElementById('subPage_logsPage').classList.add('hidden');
     document.getElementById('subPage_securityPage').classList.add('hidden');
     document.getElementById('adminMainMenuView').classList.remove('hidden');
+  }
+
+  function setBotStatus(status) {
+    db.ref('bot_control').set({ is_buying: status, chat_id: 'admin_panel' }, (error) => {
+      if(error) {
+        alert('Failed to update bot status!');
+      } else {
+        alert(status ? 'Bot started successfully! Script will begin buying.' : 'Bot stopped successfully!');
+        checkBotStatusUI();
+      }
+    });
+  }
+
+  function checkBotStatusUI() {
+    db.ref('bot_control').once('value', (snapshot) => {
+      let data = snapshot.val();
+      let statusText = document.getElementById('botStatusText');
+      if(statusText) {
+        if(data && data.is_buying) {
+          statusText.innerHTML = 'Status: <span style="color:#10b981; font-weight:bold;">Running (Active 🚀)</span>';
+        } else {
+          statusText.innerHTML = 'Status: <span style="color:#ef4444; font-weight:bold;">Stopped (Idle 🛑)</span>';
+        }
+      }
+    });
   }
 
   function toggleAdminPassword() {
@@ -757,7 +811,8 @@
       switchTab('myPurchases');
     });
   }
-
+</script>
+<script>
   function loadPendingOrders() {
     db.ref('purchases').once('value', (snapshot) => {
       let pList = document.getElementById('adminPendingOrders');
