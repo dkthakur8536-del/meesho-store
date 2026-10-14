@@ -2,173 +2,112 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meesho Digital Store - Elite Edition</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Meesho Digital Store</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-apps.js"></script>
   <style>
-    @keyframes rgbGlow {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
-      background: linear-gradient(-45deg, #090d16, #111827, #1e1b4b, #31103f);
-      background-size: 400% 400%;
-      animation: rgbGlow 15s ease infinite;
+      background: #090d16;
       color: #f8fafc;
       font-family: 'Inter', sans-serif;
       margin: 0;
-      padding: 15px;
+      padding: 10px;
+      height: 100vh;
+      overflow-y: auto;
     }
     .container {
-      max-width: 680px;
+      max-width: 100%;
       margin: auto;
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(16px);
-      padding: 24px;
-      border-radius: 20px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(15, 23, 42, 0.95);
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.06);
     }
     input, select, textarea, button {
       width: 100%;
-      padding: 12px 16px;
+      padding: 12px;
       margin: 8px 0;
       border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.1);
-      box-sizing: border-box;
       background: rgba(255,255,255,0.05);
       color: white;
       font-size: 14px;
       outline: none;
-      transition: all 0.3s ease;
     }
-    input:focus, textarea:focus, select:focus {
-      border-color: #ff3366;
-      background: rgba(255,255,255,0.09);
-      box-shadow: 0 0 15px rgba(255, 51, 102, 0.3);
-    }
-    input::placeholder, textarea::placeholder { color: #64748b; }
-    select option { background: #0f172a; color: white; }
+    input:focus, textarea:focus { border-color: #ff3366; }
     button {
       background: linear-gradient(135deg, #ff3366, #ec4899);
       color: white;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 20px rgba(255, 51, 102, 0.4);
       border: none;
     }
-    button:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(255, 51, 102, 0.6); }
     .product-card, .history-item, .category-card, .admin-menu-card {
       background: rgba(255, 255, 255, 0.03);
-      padding: 18px;
-      margin: 14px 0;
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
     .admin-menu-card {
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
-      transition: 0.2s;
     }
-    .admin-menu-card:hover { background: rgba(255, 255, 255, 0.07); border-color: #ff3366; }
-    .hidden { display: none; }
+    .hidden { display: none !important; }
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 15px;
+      padding-bottom: 10px;
     }
-    .menu-dropdown { position: relative; display: inline-block; }
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      background-color: #0f172a;
-      min-width: 190px;
-      box-shadow: 0px 10px 30px rgba(0,0,0,0.8);
-      z-index: 10;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.1);
-      overflow: hidden;
-    }
-    .dropdown-content button {
-      background: none;
-      color: white;
-      text-align: left;
-      padding: 12px 16px;
-      margin: 0;
-      width: 100%;
-      border-radius: 0;
-      box-shadow: none;
-    }
-    .dropdown-content button:hover { background: #ff3366; }
-    .menu-dropdown:hover .dropdown-content { display: block; }
-    .admin-section {
-      background: rgba(0, 0, 0, 0.35);
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .link-text { color: #f43f5e; cursor: pointer; text-decoration: underline; text-align: center; margin: 10px 0; display: block; font-size: 13px; }
-    .badge { background: #059669; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    .badge { background: #059669; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
     .badge-sold { background: #dc2626; }
     .badge-pending { background: #d97706; }
     .payment-box {
-      background: rgba(0, 0, 0, 0.5);
-      padding: 15px;
-      border-radius: 12px;
-      margin-top: 12px;
-      border: 1px dashed rgba(255, 51, 102, 0.5);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 1px dashed #ff3366;
       text-align: center;
     }
-    .copy-btn {
-      background: #0284c7;
-      padding: 8px 14px;
-      font-size: 12px;
-      border-radius: 6px;
-      margin-top: 8px;
-      width: auto;
-      display: inline-block;
-    }
+    .copy-btn { background: #0284c7; padding: 6px 12px; font-size: 11px; border-radius: 6px; width: auto; }
+    .link-text { color: #f43f5e; cursor: pointer; text-decoration: underline; text-align: center; margin: 8px 0; display: block; font-size: 13px; }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="top-bar">
-    <h2 style="margin:0; font-size:22px; background: linear-gradient(45deg, #ff3366, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">🛍️ Meesho Digital Store</h2>
-    <div class="menu-dropdown" id="menuBar" style="display:none;">
-      <button style="width:auto; padding:8px 16px; font-size:18px; border-radius:10px;">⋮</button>
-      <div class="dropdown-content">
-        <button onclick="switchTab('store')">🏪 Store Catalog</button>
-        <button onclick="switchTab('myPurchases')">📦 My Purchases</button>
-        <button onclick="switchTab('admin')">🔐 Admin Control</button>
-        <button onclick="logoutUser()">🚪 Logout</button>
-      </div>
+    <h2 style="margin:0; font-size:20px; color:#fbbf24;">🛍️ Meesho Elite Store</h2>
+    <div id="menuBar" class="hidden" style="display:flex; gap:6px;">
+      <button onclick="switchTab('store')" style="width:auto; padding:6px 10px; font-size:12px;">Store</button>
+      <button onclick="switchTab('myPurchases')" style="width:auto; padding:6px 10px; font-size:12px;">Purchases</button>
+      <button onclick="switchTab('admin')" style="width:auto; padding:6px 10px; font-size:12px; background:#334155;">Admin</button>
+      <button onclick="logoutUser()" style="width:auto; padding:6px 10px; font-size:12px; background:#dc2626;">Logout</button>
     </div>
   </div>
-  
   <!-- AUTH TAB -->
   <div id="authContainer">
-    <h3 id="authTitle" style="text-align:center; color:#fbbf24; font-size:20px;">🔐 User Signup</h3>
+    <h3 id="authTitle" style="text-align:center; color:#fbbf24;">🔐 User Login / Signup</h3>
     <input type="text" id="authEmail" placeholder="Enter Email or Phone">
     <input type="password" id="authPass" placeholder="Enter Password">
     <input type="password" id="authConfirmPass" placeholder="Confirm Password">
-    <button id="authBtn" onclick="handleUserAuth()">Register & Start Shopping</button>
-    <span id="authToggleText" class="link-text" onclick="toggleAuthMode()">Already have an account? Login here</span>
-    <span class="link-text" onclick="switchTab('admin')" style="color:#94a3b8; margin-top:20px;">Go to Admin Control Panel ➔</span>
+    <button id="authBtn" onclick="handleUserAuth()">Continue</button>
+    <span id="authToggleText" class="link-text" onclick="toggleAuthMode()">Don't have an account? Signup here</span>
+    <span class="link-text" onclick="switchTab('admin')" style="color:#94a3b8; margin-top:20px;">🔐 Admin Panel Access ➔</span>
   </div>
 
   <!-- STORE TAB -->
   <div id="storeTab" class="hidden">
-    <h3 style="color:#f8fafc;">🏪 Available Products & Categories</h3>
-    <div style="margin-bottom:15px;">
-      <label style="font-size:13px; color:#94a3b8;">Filter by Category:</label>
+    <h3>🏪 Store Catalog</h3>
+    <div style="margin-bottom:12px;">
       <select id="categoryFilter" onchange="renderProducts()">
         <option value="all">All Categories</option>
       </select>
@@ -176,23 +115,20 @@
     <div id="productList"></div>
     
     <!-- CHECKOUT VIEW -->
-    <div id="checkoutView" class="hidden product-card" style="border: 2px solid #ff3366;">
-      <button onclick="cancelCheckout()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:10px;">⬅ Back to Catalog</button>
-      <h3 id="checkoutTitle" style="color:#fbbf24; margin-top:0;">Checkout</h3>
-      <p id="checkoutDetails" style="font-size:14px; color:#cbd5e1;"></p>
+    <div id="checkoutView" class="product-card hidden" style="border: 2px solid #ff3366;">
+      <button onclick="cancelCheckout()" style="width:auto; padding:5px 10px; background:#475569; font-size:11px;">⬅ Back</button>
+      <h3 id="checkoutTitle" style="color:#fbbf24; margin:8px 0;">Checkout</h3>
+      <p id="checkoutDetails" style="font-size:13px; color:#cbd5e1;"></p>
       
       <div class="payment-box">
-        <p style="margin:0 0 8px 0; font-size:13px; color:#cbd5e1;">Scan QR or pay via UPI App:</p>
-        <img id="checkoutQrImg" src="" alt="Payment QR" style="border-radius:10px; border:2px solid white; width:160px; height:160px; background:white; padding:5px;">
-        <div style="margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-          <button onclick="downloadQrCode()" style="padding:6px 12px; font-size:12px; background:#475569; width:auto; margin:0;">📥 Download QR</button>
-          <button onclick="triggerUpiPayment()" style="padding:6px 12px; font-size:12px; background:#059669; width:auto; margin:0;">⚡ Pay via UPI App</button>
-          <button onclick="copyUpiId()" style="padding:6px 12px; font-size:12px; background:#0284c7; width:auto; margin:0;">📋 Copy UPI ID</button>
+        <p style="margin:0 0 6px 0; font-size:12px;">Scan QR or Pay via UPI App:</p>
+        <img id="checkoutQrImg" src="" alt="QR" style="border-radius:8px; width:150px; height:150px; background:white; padding:4px;">
+        <div style="margin-top:8px;">
+          <a id="checkoutUpiLink" href=""><button style="padding:8px; font-size:12px; background:#059669;">⚡ Pay via UPI App</button></a>
         </div>
       </div>
-
-      <div style="margin-top:15px;">
-        <input type="text" id="checkoutUtrInput" placeholder="Enter Exact 12-Digit UTR Number (e.g. 4231...)" maxlength="12">
+      <div style="margin-top:12px;">
+        <input type="text" id="checkoutUtrInput" placeholder="Enter 12-digit UTR Number">
         <button onclick="confirmCheckoutOrder()" style="background:#059669;">Submit UTR for Approval</button>
       </div>
     </div>
@@ -200,132 +136,70 @@
 
   <!-- PURCHASES TAB -->
   <div id="purchasesTab" class="hidden">
-    <h3 style="color:#f8fafc;">📦 Your Purchases & Deliveries</h3>
+    <h3>📦 Your Purchases</h3>
     <div id="buyerPurchaseList"></div>
   </div>
+
   <!-- ADMIN PANEL TAB -->
   <div id="adminTab" class="hidden">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="color:#fbbf24;">🔐 Admin Control Center</h3>
-      <button onclick="switchTab('store')" style="width:auto; padding:6px 14px; background:#334155; font-size:12px;">Back to Store</button>
+      <h3 style="color:#fbbf24;">🔐 Admin Panel</h3>
+      <button onclick="switchTab('store')" style="width:auto; padding:6px 10px; background:#334155; font-size:11px;">Back to Store</button>
     </div>
     
-    <div id="adminLogin" style="margin-top:25px;">
-      <input type="password" id="adminPassInput" placeholder="Enter Master Admin Password">
+    <div id="adminLogin" style="margin-top:20px;">
+      <input type="password" id="adminPassInput" placeholder="Enter Admin Password">
       <button onclick="loginAdmin()">Login Admin</button>
     </div>
     
     <div id="adminDashboard" class="hidden">
       <div id="adminMainMenuView">
-        <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Select a management module:</p>
-        
         <div class="admin-menu-card" onclick="openAdminSubPage('stockPage')">
-          <div>
-            <h4 style="margin:0; color:#38bdf8;">📁 Category & Stock Management</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Manage category prices, file/text upload & bulk stock</p>
-          </div>
-          <span style="font-size:20px; color:#38bdf8;">➔</span>
+          <div><h4 style="margin:0; color:#38bdf8;">📁 Stock & Category Pricing</h4></div>
+          <span>➔</span>
         </div>
-
         <div class="admin-menu-card" onclick="openAdminSubPage('approvalsPage')">
-          <div>
-            <h4 style="margin:0; color:#fbbf24;">⚡ Payment Approvals <span id="pendingBadgeCount" style="background:#dc2626; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Verify UTRs and instantly deliver in-app</p>
-          </div>
-          <span style="font-size:20px; color:#fbbf24;">➔</span>
+          <div><h4 style="margin:0; color:#fbbf24;">⚡ Payment Approvals (<span id="pendingBadgeCount">0</span>)</h4></div>
+          <span>➔</span>
         </div>
-
         <div class="admin-menu-card" onclick="openAdminSubPage('logsPage')">
-          <div>
-            <h4 style="margin:0; color:#10b981;">📜 Users & Sales Logs</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">View registered users and transaction history</p>
-          </div>
-          <span style="font-size:20px; color:#10b981;">➔</span>
+          <div><h4 style="margin:0; color:#10b981;">📜 Users & Sales Logs</h4></div>
+          <span>➔</span>
         </div>
-
-        <div class="admin-menu-card" onclick="openAdminSubPage('securityPage')">
-          <div>
-            <h4 style="margin:0; color:#f43f5e;">🔒 Security Settings</h4>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8;">Change Master Admin Password</p>
-          </div>
-          <span style="font-size:20px; color:#f43f5e;">➔</span>
-        </div>
-
-        <button onclick="logoutAdmin()" style="background:#dc2626; margin-top:25px;">Logout Admin</button>
+        <button onclick="logoutAdmin()" style="background:#dc2626; margin-top:20px;">Logout Admin</button>
       </div>
 
-      <!-- SUB PAGE 1: CATEGORY & STOCK (With File & Text Upload Restored) -->
+      <!-- STOCK PAGE -->
       <div id="subPage_stockPage" class="hidden">
-        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
-        <div class="admin-section">
-          <h4 style="color:#fbbf24;">📁 Manage Category Pricing & Title</h4>
-          <input type="text" id="catNameInput" placeholder="Category Name (e.g., Netflix)">
-          <input type="text" id="catTitleInput" placeholder="Default Item Title">
-          <input type="number" id="catPriceInput" placeholder="Fixed Category Price (₹)">
-          <button onclick="saveCategoryMeta()">Save Category Meta</button>
+        <button onclick="closeAdminSubPage()" style="width:auto; padding:5px 10px; background:#475569; font-size:11px;">⬅ Back</button>
+        <div style="background:rgba(0,0,0,0.3); padding:12px; margin:10px 0; border-radius:10px;">
+          <h4>📁 Set Category Price & Title</h4>
+          <input type="text" id="catNameInput" placeholder="Category Name">
+          <input type="text" id="catTitleInput" placeholder="Default Title">
+          <input type="number" id="catPriceInput" placeholder="Fixed Price (₹)">
+          <button onclick="saveCategoryMeta()">Save Category</button>
         </div>
-
-        <div class="admin-section">
-          <h4>📦 Add Stock to Category (Bulk, Text, or File Upload)</h4>
-          <input type="text" id="targetCategorySelect" placeholder="Enter Category Name">
-          
-          <label style="font-size:13px; color:#cbd5e1;">Upload Mode:</label>
-          <select id="stockAddMode" onchange="toggleStockMode()">
-            <option value="bulk">⚡ Bulk Add Multiple Lines</option>
-            <option value="single_text">📝 Single Text / JSON</option>
-            <option value="single_file">📁 Upload File (.txt / .json)</option>
-          </select>
-
-          <div id="bulkStockDiv">
-            <textarea id="bulkStockData" placeholder="Paste multiple items here (Each line = 1 item)..." style="height:90px; font-family:monospace;"></textarea>
-          </div>
-          <div id="singleTextDiv" class="hidden">
-            <textarea id="singleTextData" placeholder="Paste single JSON or text content..." style="height:90px; font-family:monospace;"></textarea>
-          </div>
-          <div id="singleFileDiv" class="hidden">
-            <input type="file" id="singleFileInput" accept=".txt,.json">
-          </div>
-
-          <button onclick="processStockUpload()" style="background:#059669;">Publish Stock Items</button>
+        <div style="background:rgba(0,0,0,0.3); padding:12px; margin:10px 0; border-radius:10px;">
+          <h4>📦 Add Stock (Bulk Lines)</h4>
+          <input type="text" id="targetCategorySelect" placeholder="Category Name">
+          <textarea id="bulkStockData" placeholder="Paste items (Each line = 1 item)..." style="height:80px; font-family:monospace;"></textarea>
+          <button onclick="processStockUpload()" style="background:#059669;">Publish Stock</button>
         </div>
-
-        <div class="admin-section">
-          <h4>📊 Existing Inventory</h4>
-          <div id="adminCategoryList"></div>
-        </div>
+        <div id="adminCategoryList"></div>
       </div>
 
-      <!-- SUB PAGE 2: APPROVALS -->
+      <!-- APPROVALS PAGE -->
       <div id="subPage_approvalsPage" class="hidden">
-        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
-        <div class="admin-section" style="border: 1px solid #d97706;">
-          <h4 style="color:#fbbf24;">⚡ Payment Verification & Instant In-App Delivery</h4>
-          <div id="adminPendingOrders"></div>
-        </div>
+        <button onclick="closeAdminSubPage()" style="width:auto; padding:5px 10px; background:#475569; font-size:11px;">⬅ Back</button>
+        <div id="adminPendingOrders" style="margin-top:10px;"></div>
       </div>
 
-      <!-- SUB PAGE 3: LOGS -->
+      <!-- LOGS PAGE -->
       <div id="subPage_logsPage" class="hidden">
-        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
-        <div class="admin-section">
-          <div id="adminUsersList"></div>
-          <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0;">
-          <div id="adminSalesHistory"></div>
-        </div>
+        <button onclick="closeAdminSubPage()" style="width:auto; padding:5px 10px; background:#475569; font-size:11px;">⬅ Back</button>
+        <div id="adminUsersList" style="margin-top:10px;"></div>
+        <div id="adminSalesHistory" style="margin-top:10px;"></div>
       </div>
-
-      <!-- SUB PAGE 4: SECURITY -->
-      <div id="subPage_securityPage" class="hidden">
-        <button onclick="closeAdminSubPage()" style="width:auto; padding:6px 12px; background:#475569; font-size:12px; margin-bottom:15px;">⬅ Back to Admin Menu</button>
-        <div class="admin-section">
-          <h4>🔒 Change Master Admin Password</h4>
-          <input type="password" id="oldAdminPass" placeholder="Enter Current Admin Password">
-          <input type="password" id="newAdminPass" placeholder="Enter New Admin Password">
-          <input type="password" id="confirmAdminPass" placeholder="Confirm New Password">
-          <button onclick="updateAdminPassword()">Update Admin Password</button>
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
@@ -345,94 +219,40 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
+  const ADMIN_PASS = "8535"; // Strict single admin password
   let currentUser = localStorage.getItem('currentUser') || null;
   let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
   let currentTab = localStorage.getItem('currentTab') || 'auth';
   let isLoginMode = false;
-  const merchantUpiId = "9870815480@slc";
+  let merchantUpiId = "9870815480@slc";
   let activeCheckoutProduct = null;
-
-  if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.ready();
-    window.Telegram.WebApp.expand();
-    if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-      let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-      currentUser = tgUser.username ? `@${tgUser.username}` : `${tgUser.first_name}_${tgUser.id}`;
-      localStorage.setItem('currentUser', currentUser);
-    }
-  }
+  let telegramUserId = null;
 
   window.onload = function() {
-    if (currentUser) {
-      document.getElementById('authContainer').classList.add('hidden');
-      document.getElementById('menuBar').style.display = 'block';
+    // Telegram WebApp Initialization
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.expand();
+      window.Telegram.WebApp.ready();
+      let tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+      if (tgUser && tgUser.id) {
+        telegramUserId = tgUser.id.toString();
+      }
     }
-    
-    if (currentTab === 'admin' && isAdminLoggedIn) {
-      document.getElementById('adminTab').classList.remove('hidden');
-      document.getElementById('adminLogin').classList.add('hidden');
-      document.getElementById('adminDashboard').classList.remove('hidden');
-      loadAdminInventory();
-      loadAdminData();
-      loadPendingOrders();
+
+    if (!currentUser && currentTab !== 'admin') {
+      switchTab('auth');
     } else {
       switchTab(currentUser ? currentTab : 'auth');
     }
   };
 
-  function toggleAuthMode() {
-    isLoginMode = !isLoginMode;
-    if(isLoginMode) {
-      document.getElementById('authTitle').innerText = '🔐 User Login';
-      document.getElementById('authBtn').innerText = 'Login to Store';
-      document.getElementById('authConfirmPass').style.display = 'none';
-      document.getElementById('authToggleText').innerText = "Don't have an account? Signup here";
-    } else {
-      document.getElementById('authTitle').innerText = '🔐 User Signup';
-      document.getElementById('authBtn').innerText = 'Register & Start Shopping';
-      document.getElementById('authConfirmPass').style.display = 'block';
-      document.getElementById('authToggleText').innerText = "Already have an account? Login here";
-    }
-  }
-
-  function handleUserAuth() {
-    let email = document.getElementById('authEmail').value.trim().replace(/[.#$\[\]]/g, "_");
-    let pass = document.getElementById('authPass').value;
-    let confirmPass = document.getElementById('authConfirmPass').value;
-
-    if(!email || !pass) { alert('Please fill all fields!'); return; }
-    if(!isLoginMode && pass !== confirmPass) { alert('Passwords do not match!'); return; }
-
-    db.ref('users/' + email).once('value', (snapshot) => {
-      let userData = snapshot.val();
-      if(!isLoginMode) {
-        if(userData) { alert('User already exists! Please login.'); return; }
-        db.ref('users/' + email).set({ email, pass, date: new Date().toLocaleString() });
-        alert('Signup successful!');
-      } else {
-        if(!userData || userData.pass !== pass) { alert('Invalid email or password!'); return; }
-      }
-
-      currentUser = email;
-      localStorage.setItem('currentUser', currentUser);
-      document.getElementById('authContainer').classList.add('hidden');
-      document.getElementById('menuBar').style.display = 'block';
-      switchTab('store');
-    });
-  }
-
-  function logoutUser() {
-    currentUser = null;
-    localStorage.removeItem('currentUser');
-    localStorage.setItem('currentTab', 'auth');
-    document.getElementById('menuBar').style.display = 'none';
-    document.getElementById('storeTab').classList.add('hidden');
-    document.getElementById('purchasesTab').classList.add('hidden');
-    document.getElementById('adminTab').classList.add('hidden');
-    document.getElementById('authContainer').classList.remove('hidden');
-  }
-
   function switchTab(tab) {
+    if (!currentUser && tab !== 'auth' && tab !== 'admin') {
+      alert('Please login first!');
+      switchTab('auth');
+      return;
+    }
+
     currentTab = tab;
     localStorage.setItem('currentTab', tab);
 
@@ -440,103 +260,120 @@
     document.getElementById('storeTab').classList.add('hidden');
     document.getElementById('purchasesTab').classList.add('hidden');
     document.getElementById('adminTab').classList.add('hidden');
-    
-    if(tab === 'auth') {
-      if(!currentUser) document.getElementById('authContainer').classList.remove('hidden');
-      else switchTab('store');
-    } else if(tab === 'store') {
+    document.getElementById('menuBar').classList.add('hidden');
+
+    if (tab === 'auth') {
+      document.getElementById('authContainer').classList.remove('hidden');
+    } else if (tab === 'store') {
       document.getElementById('storeTab').classList.remove('hidden');
+      document.getElementById('menuBar').classList.remove('hidden');
       cancelCheckout();
       loadCategoriesDropdown();
       renderProducts();
-    } else if(tab === 'myPurchases') {
+    } else if (tab === 'myPurchases') {
       document.getElementById('purchasesTab').classList.remove('hidden');
+      document.getElementById('menuBar').classList.remove('hidden');
       renderBuyerPurchases();
-    } else if(tab === 'admin') {
+    } else if (tab === 'admin') {
       document.getElementById('adminTab').classList.remove('hidden');
       if (isAdminLoggedIn) {
         document.getElementById('adminLogin').classList.add('hidden');
         document.getElementById('adminDashboard').classList.remove('hidden');
         loadAdminInventory();
-        loadAdminData();
         loadPendingOrders();
+      } else {
+        document.getElementById('adminLogin').classList.remove('hidden');
+        document.getElementById('adminDashboard').classList.add('hidden');
+      }
+    }
+    updateBackButton();
+  }
+
+  function updateBackButton() {
+    if (window.Telegram && window.Telegram.WebApp) {
+      if (currentTab !== 'store' && currentTab !== 'auth') {
+        window.Telegram.WebApp.BackButton.show();
+        window.Telegram.WebApp.BackButton.onClick(() => {
+          switchTab('store');
+        });
+      } else {
+        window.Telegram.WebApp.BackButton.hide();
       }
     }
   }
 
+  function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    document.getElementById('authTitle').innerText = isLoginMode ? '🔐 User Login' : '🔐 User Signup';
+    document.getElementById('authBtn').innerText = isLoginMode ? 'Login' : 'Signup';
+    document.getElementById('authConfirmPass').style.display = isLoginMode ? 'none' : 'block';
+    document.getElementById('authToggleText').innerText = isLoginMode ? "Don't have an account? Signup here" : "Already have an account? Login here";
+  }
+
+  function handleUserAuth() {
+    let email = document.getElementById('authEmail').value.trim().replace(/[.#$\[\]]/g, "_");
+    let pass = document.getElementById('authPass').value;
+    if (!email || !pass) { alert('Fill all fields!'); return; }
+
+    db.ref('users/' + email).once('value', (snapshot) => {
+      let user = snapshot.val();
+      if (!isLoginMode) {
+        if (user) { alert('User already exists!'); return; }
+        db.ref('users/' + email).set({ email, pass, telegramId: telegramUserId || '', date: new Date().toLocaleString() });
+        alert('Signup success!');
+      } else {
+        if (!user || user.pass !== pass) { alert('Invalid credentials!'); return; }
+        if (telegramUserId && !user.telegramId) {
+          db.ref('users/' + email).update({ telegramId: telegramUserId });
+        }
+      }
+      currentUser = email;
+      localStorage.setItem('currentUser', currentUser);
+      switchTab('store');
+    });
+  }
+
+  function logoutUser() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    switchTab('auth');
+  }
+
   function loginAdmin() {
     let val = document.getElementById('adminPassInput').value;
-    db.ref('admin_config/password').once('value', (snapshot) => {
-      let masterPass = snapshot.val() || '8535';
-      if(val === masterPass) {
-        isAdminLoggedIn = true;
-        localStorage.setItem('isAdminLoggedIn', 'true');
-        document.getElementById('adminLogin').classList.add('hidden');
-        document.getElementById('adminDashboard').classList.remove('hidden');
-        loadAdminInventory();
-        loadAdminData();
-        loadPendingOrders();
-      } else {
-        alert('Wrong Admin Password!');
-      }
-    });
+    if (val === ADMIN_PASS) {
+      isAdminLoggedIn = true;
+      localStorage.setItem('isAdminLoggedIn', 'true');
+      document.getElementById('adminLogin').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      loadAdminInventory();
+      loadPendingOrders();
+    } else {
+      alert('Wrong Admin Password!');
+    }
   }
 
   function logoutAdmin() {
     isAdminLoggedIn = false;
     localStorage.removeItem('isAdminLoggedIn');
-    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminLogin').classList.remove('hidden');
     document.getElementById('adminDashboard').classList.add('hidden');
     document.getElementById('adminPassInput').value = '';
   }
 
   function openAdminSubPage(pageId) {
     document.getElementById('adminMainMenuView').classList.add('hidden');
-    ['stockPage', 'approvalsPage', 'logsPage', 'securityPage'].forEach(p => {
-      document.getElementById('subPage_' + p).classList.add('hidden');
-    });
+    document.getElementById('subPage_stockPage').classList.add('hidden');
+    document.getElementById('subPage_approvalsPage').classList.add('hidden');
+    document.getElementById('subPage_logsPage').classList.add('hidden');
     document.getElementById('subPage_' + pageId).classList.remove('hidden');
   }
 
   function closeAdminSubPage() {
-    ['stockPage', 'approvalsPage', 'logsPage', 'securityPage'].forEach(p => {
-      document.getElementById('subPage_' + p).classList.add('hidden');
-    });
+    document.getElementById('subPage_stockPage').classList.add('hidden');
+    document.getElementById('subPage_approvalsPage').classList.add('hidden');
+    document.getElementById('subPage_logsPage').classList.add('hidden');
     document.getElementById('adminMainMenuView').classList.remove('hidden');
-  }
-
-  function updateAdminPassword() {
-    let oldP = document.getElementById('oldAdminPass').value;
-    let newP = document.getElementById('newAdminPass').value;
-    let confirmP = document.getElementById('confirmAdminPass').value;
-
-    db.ref('admin_config/password').once('value', (snapshot) => {
-      let masterPass = snapshot.val() || '8535';
-      if(oldP !== masterPass) { alert('Current admin password is incorrect!'); return; }
-      if(!newP) { alert('New password cannot be empty!'); return; }
-      if(newP !== confirmP) { alert('New passwords do not match!'); return; }
-
-      db.ref('admin_config').update({ password: newP }, (err) => {
-        if(err) alert('Failed to update password');
-        else {
-          alert('Master Admin password updated successfully!');
-          document.getElementById('oldAdminPass').value = '';
-          document.getElementById('newAdminPass').value = '';
-          document.getElementById('confirmAdminPass').value = '';
-        }
-      });
-    });
-  }
-
-  function toggleStockMode() {
-    let mode = document.getElementById('stockAddMode').value;
-    document.getElementById('bulkStockDiv').classList.add('hidden');
-    document.getElementById('singleTextDiv').classList.add('hidden');
-    document.getElementById('singleFileDiv').classList.add('hidden');
-
-    if(mode === 'bulk') document.getElementById('bulkStockDiv').classList.remove('hidden');
-    else if(mode === 'single_text') document.getElementById('singleTextDiv').classList.remove('hidden');
-    else if(mode === 'single_file') document.getElementById('singleFileDiv').classList.remove('hidden');
   }
 </script>
 <script>
@@ -544,104 +381,57 @@
     let catName = document.getElementById('catNameInput').value.trim();
     let title = document.getElementById('catTitleInput').value.trim();
     let price = document.getElementById('catPriceInput').value.trim();
-
-    if(!catName || !price || !title) { alert('Please fill all fields!'); return; }
+    if (!catName || !price || !title) { alert('Fill all category fields!'); return; }
 
     db.ref('category_meta/' + catName).set({ name: catName, title, price }, () => {
-      db.ref('products').once('value', (snapshot) => {
-        let products = snapshot.val();
-        if(products) {
-          Object.keys(products).forEach(k => {
-            if(products[k].category === catName && products[k].status === 'available') {
-              db.ref('products/' + k).update({ price: price });
-            }
-          });
-        }
-      });
-      alert(`Category [${catName}] saved successfully!`);
+      alert('Category saved!');
+      document.getElementById('catNameInput').value = '';
+      document.getElementById('catTitleInput').value = '';
+      document.getElementById('catPriceInput').value = '';
       loadAdminInventory();
     });
   }
 
   function processStockUpload() {
     let category = document.getElementById('targetCategorySelect').value.trim();
-    if(!category) { alert('Please enter target category name!'); return; }
+    if (!category) { alert('Enter category name!'); return; }
 
     db.ref('category_meta/' + category).once('value', (snapshot) => {
       let meta = snapshot.val();
-      if(!meta) { alert('Please first save category pricing & title in the category manager above!'); return; }
+      if (!meta) { alert('Save category pricing first!'); return; }
 
-      let mode = document.getElementById('stockAddMode').value;
-      if(mode === 'bulk') {
-        let bulkText = document.getElementById('bulkStockData').value.trim();
-        if(!bulkText) { alert('Please paste items data!'); return; }
-        let lines = bulkText.split('\n').filter(l => l.trim() !== '');
+      let bulkText = document.getElementById('bulkStockData').value.trim();
+      if (!bulkText) { alert('Paste items data!'); return; }
+      let lines = bulkText.split('\n').filter(l => l.trim() !== '');
 
-        lines.forEach((line, index) => {
-          let itemName = `${meta.title} #${index + 1}`;
-          let newRef = db.ref('products').push();
-          newRef.set({
-            id: newRef.key,
-            category: category,
-            name: itemName,
-            price: meta.price,
-            content: line.trim(),
-            status: 'available',
-            date: new Date().toLocaleString()
-          });
+      lines.forEach((line, index) => {
+        let newRef = db.ref('products').push();
+        newRef.set({
+          id: newRef.key,
+          category,
+          name: `${meta.title} #${index + 1}`,
+          price: meta.price,
+          content: line.trim(),
+          status: 'available',
+          date: new Date().toLocaleString()
         });
-        alert(`Successfully added ${lines.length} stock items!`);
-        document.getElementById('bulkStockData').value = '';
-        loadAdminInventory();
-
-      } else if(mode === 'single_text') {
-        let textContent = document.getElementById('singleTextData').value.trim();
-        if(!textContent) { alert('Please paste content!'); return; }
-        saveProductToDB(category, meta.title, meta.price, textContent);
-        document.getElementById('singleTextData').value = '';
-
-      } else if(mode === 'single_file') {
-        let fileInput = document.getElementById('singleFileInput');
-        if(fileInput.files.length === 0) { alert('Please upload a file!'); return; }
-        let file = fileInput.files[0];
-        let reader = new FileReader();
-        reader.onload = function(e) {
-          let content = e.target.result;
-          saveProductToDB(category, meta.title, meta.price, content);
-          fileInput.value = '';
-        };
-        reader.readAsText(file);
-      }
+      });
+      alert(`Added ${lines.length} items successfully!`);
+      document.getElementById('bulkStockData').value = '';
+      loadAdminInventory();
     });
-  }
-
-  function saveProductToDB(category, name, price, content) {
-    let newRef = db.ref('products').push();
-    newRef.set({ 
-      id: newRef.key, 
-      category, 
-      name, 
-      price, 
-      content, 
-      status: 'available',
-      date: new Date().toLocaleString() 
-    });
-    alert('Stock item added successfully!');
-    loadAdminInventory();
   }
 
   function loadCategoriesDropdown() {
     db.ref('products').once('value', (snapshot) => {
       let filter = document.getElementById('categoryFilter');
-      let currentVal = filter.value;
       filter.innerHTML = '<option value="all">All Categories</option>';
       let categories = new Set();
       let products = snapshot.val();
-      if(products) {
-        Object.keys(products).forEach(k => { if(products[k].category) categories.add(products[k].category); });
+      if (products) {
+        Object.keys(products).forEach(k => { if (products[k].category) categories.add(products[k].category); });
       }
       categories.forEach(cat => { filter.innerHTML += `<option value="${cat}">${cat}</option>`; });
-      filter.value = currentVal;
     });
   }
 
@@ -651,100 +441,70 @@
       let list = document.getElementById('productList');
       list.innerHTML = '';
       let products = snapshot.val();
-      if(!products) { list.innerHTML = '<p>No products available.</p>'; return; }
-      
+      if (!products) { list.innerHTML = '<p>No products available.</p>'; return; }
+
       let count = 0;
       Object.keys(products).forEach((key) => {
         let p = products[key];
-        if((selectedCat === 'all' || p.category === selectedCat) && p.status === 'available') {
-          count++;
-          list.innerHTML += `
-            <div class="product-card">
-              <h4 style="margin:0 0 5px 0; color:#fbbf24; font-size:18px;">${p.name}</h4>
-              <p style="margin:0 0 12px 0; font-size:14px;"><b>Category:</b> ${p.category} | <span style="color:#ff3366; font-size:16px; font-weight:bold;">₹${p.price}</span></p>
-              <button onclick="startCheckout('${key}', '${p.name}', '${p.price}')" style="background:linear-gradient(135deg, #059669, #10b981);">🛒 Buy Now</button>
-            </div>
-          `;
+        if (selectedCat === 'all' || p.category === selectedCat) {
+          if (p.status === 'available') {
+            count++;
+            list.innerHTML += `
+              <div class="product-card">
+                <h4 style="margin:0 0 4px 0; color:#fbbf24;">${p.name}</h4>
+                <p style="margin:0 0 10px 0; font-size:13px;">Category: ${p.category} | <span style="color:#ff3366; font-weight:bold;">₹${p.price}</span></p>
+                <button onclick="startCheckout('${key}', '${p.name}', '${p.price}')" style="background:#059669;">🛒 Buy Now</button>
+              </div>
+            `;
+          }
         }
       });
-      if(count === 0) { list.innerHTML = '<p>No items available right now.</p>'; }
+      if (count === 0) list.innerHTML = '<p>No items available.</p>';
     });
   }
 
   function startCheckout(key, name, price) {
     activeCheckoutProduct = { key, name, price };
     document.getElementById('productList').classList.add('hidden');
-    document.getElementById('categoryFilter').parentElement.classList.add('hidden');
+    document.getElementById('categoryFilter').classList.add('hidden');
     document.getElementById('checkoutView').classList.remove('hidden');
 
     document.getElementById('checkoutTitle').innerText = `Checkout: ${name}`;
-    document.getElementById('checkoutDetails').innerHTML = `<b>Item:</b> ${name}<br><b>Price:</b> <span style="color:#ff3366; font-size:16px; font-weight:bold;">₹${price}</span>`;
+    document.getElementById('checkoutDetails').innerHTML = `Item: ${name}<br>Price: <span style="color:#ff3366; font-weight:bold;">₹${price}</span>`;
 
     let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${price}&cu=INR`;
     let qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
 
     document.getElementById('checkoutQrImg').src = qrApi;
+    document.getElementById('checkoutUpiLink').href = upiString;
     document.getElementById('checkoutUtrInput').value = '';
-  }
-
-  async function downloadQrCode() {
-    let qrUrl = document.getElementById('checkoutQrImg').src;
-    try {
-      let response = await fetch(qrUrl);
-      let blob = await response.blob();
-      let blobUrl = URL.createObjectURL(blob);
-      let a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'Payment_QR.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-      alert('QR Code downloaded successfully to your device!');
-    } catch(e) {
-      window.open(qrUrl, '_blank');
-    }
-  }
-
-  function triggerUpiPayment() {
-    if(!activeCheckoutProduct) return;
-    let upiString = `upi://pay?pa=${merchantUpiId}&pn=MeeshoStore&am=${activeCheckoutProduct.price}&cu=INR`;
-    window.location.href = upiString;
-  }
-
-  function copyUpiId() {
-    navigator.clipboard.writeText(merchantUpiId).then(() => alert('UPI ID copied: ' + merchantUpiId));
   }
 
   function cancelCheckout() {
     activeCheckoutProduct = null;
     document.getElementById('checkoutView').classList.add('hidden');
     document.getElementById('productList').classList.remove('hidden');
-    document.getElementById('categoryFilter').parentElement.classList.remove('hidden');
+    document.getElementById('categoryFilter').classList.remove('hidden');
   }
 
   function confirmCheckoutOrder() {
-    if(!activeCheckoutProduct) return;
+    if (!activeCheckoutProduct) return;
     let utr = document.getElementById('checkoutUtrInput').value.trim();
-    
-    // Strict 12-digit UTR validation
-    let utrRegex = /^\d{12}$/;
-    if(!utrRegex.test(utr)) {
-      alert('❌ Invalid UTR! Please enter exact 12-digit numeric UPI UTR number.');
-      return;
-    }
+    if (!utr) { alert('Enter 12-digit UTR number!'); return; }
 
     let { key, name, price } = activeCheckoutProduct;
     db.ref('products/' + key).once('value', (snapshot) => {
       let p = snapshot.val();
-      if(!p || p.status !== 'available') { alert('Item sold out!'); cancelCheckout(); renderProducts(); return; }
+      if (!p || p.status !== 'available') { alert('Item sold out!'); cancelCheckout(); renderProducts(); return; }
 
       db.ref('products/' + key).update({ status: 'pending' });
+
       let purchaseRef = db.ref('purchases').push();
       purchaseRef.set({
         id: purchaseRef.key,
         productKey: key,
         user: currentUser,
+        telegramId: telegramUserId || '',
         productName: name,
         price: price,
         utr: utr,
@@ -753,7 +513,7 @@
         date: new Date().toLocaleString()
       });
 
-      alert('Order submitted successfully! Admin will verify your UTR.');
+      alert('Order submitted! Waiting for admin approval.');
       cancelCheckout();
       switchTab('myPurchases');
     });
@@ -764,50 +524,46 @@
       let pList = document.getElementById('adminPendingOrders');
       pList.innerHTML = '';
       let purchases = snapshot.val();
-      if(!purchases) { 
-        pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders.</p>'; 
-        document.getElementById('pendingBadgeCount').innerText = '0';
-        return; 
-      }
+      if (!purchases) { pList.innerHTML = '<p>No pending orders.</p>'; document.getElementById('pendingBadgeCount').innerText = '0'; return; }
 
-      let pendingCount = 0;
+      let count = 0;
       Object.keys(purchases).forEach((key) => {
         let item = purchases[key];
-        if(item.status === 'pending') {
-          pendingCount++;
+        if (item.status === 'pending') {
+          count++;
           pList.innerHTML += `
-            <div style="background:rgba(0,0,0,0.4); padding:12px; margin:8px 0; border-radius:8px; border-left:4px solid #d97706; font-size:13px;">
-              <b>Buyer:</b> ${item.user}<br>
+            <div style="background:rgba(0,0,0,0.4); padding:10px; margin:8px 0; border-radius:8px; border-left:4px solid #d97706; font-size:13px;">
+              <b>Buyer:</b> ${item.user} (${item.telegramId || 'No TG ID'})<br>
               <b>Item:</b> ${item.productName} (₹${item.price})<br>
-              <b>UTR:</b> <span style="color:#38bdf8; font-weight:bold; font-size:14px;">${item.utr}</span><br>
-              <div style="margin-top:10px; display:flex; gap:8px;">
-                <button onclick="approveOrder('${item.id}', '${item.productKey}')" style="background:#059669; padding:6px 12px; font-size:12px; margin:0; width:auto;">✅ Verify & Instant Deliver</button>
-                <button onclick="rejectOrder('${item.id}', '${item.productKey}')" style="background:#dc2626; padding:6px 12px; font-size:12px; margin:0; width:auto;">❌ Reject</button>
+              <b>UTR:</b> <span style="color:#38bdf8; font-weight:bold;">${item.utr}</span><br>
+              <div style="margin-top:8px; display:flex; gap:6px;">
+                <button onclick="approveOrder('${item.id}', '${item.productKey}', \`${btoa(item.content)}\`, '${item.telegramId}')" style="background:#059669; padding:5px 10px; font-size:11px; width:auto;">✅ Approve & Send</button>
+                <button onclick="rejectOrder('${item.id}', '${item.productKey}')" style="background:#dc2626; padding:5px 10px; font-size:11px; width:auto;">❌ Reject</button>
               </div>
             </div>
           `;
         }
       });
-      document.getElementById('pendingBadgeCount').innerText = pendingCount;
-      if(pendingCount === 0) { pList.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No pending orders.</p>'; }
+      document.getElementById('pendingBadgeCount').innerText = count;
+      if (count === 0) pList.innerHTML = '<p>No pending orders.</p>';
     });
   }
 
-  function approveOrder(purchaseId, productKey) {
+  function approveOrder(purchaseId, productKey, encodedContent, tgId) {
     db.ref('purchases/' + purchaseId).update({ status: 'approved' });
     db.ref('products/' + productKey).update({ status: 'sold' });
-    alert('Payment verified! Order approved and instantly delivered to buyer.');
+
+    let decodedContent = atob(encodedContent);
+    alert('Order approved successfully!\n\nNote: For Telegram Bot auto-chat delivery, your Telegram bot running in Termux will detect this approval and send the JSON/credentials to the buyer Telegram chat if tgId is present.');
     loadPendingOrders();
-    loadAdminInventory();
   }
 
   function rejectOrder(purchaseId, productKey) {
-    if(confirm('Reject this payment?')) {
+    if (confirm('Reject this payment?')) {
       db.ref('purchases/' + purchaseId).remove();
       db.ref('products/' + productKey).update({ status: 'available' });
       alert('Order rejected and restocked.');
       loadPendingOrders();
-      loadAdminInventory();
     }
   }
 
@@ -816,27 +572,29 @@
       let list = document.getElementById('buyerPurchaseList');
       list.innerHTML = '';
       let purchases = snapshot.val();
-      if(!purchases) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
+      if (!purchases) { list.innerHTML = '<p>No purchases yet.</p>'; return; }
 
       let count = 0;
       Object.keys(purchases).forEach((key) => {
         let item = purchases[key];
-        if(item.user === currentUser) {
+        if (item.user === currentUser) {
           count++;
-          let statusBadge = item.status === 'pending' ? '<span class="badge badge-pending">Verification Pending</span>' : '<span class="badge">Approved & Unlocked</span>';
-          let deliveryContent = item.status === 'pending' ? 
-            '<p style="font-size:13px; color:#fbbf24; margin-top:8px;">⏳ Admin is verifying UTR. Your content will appear here instantly once approved.</p>' :
-            `<div style="background:rgba(0,0,0,0.6); padding:12px; border-radius:8px; margin-top:10px;"><button onclick="copyToClipboard(\`${item.content.replace(/"/g, '&quot;')}\`)" class="copy-btn">📋 Copy Content</button><pre style="white-space:pre-wrap; word-break:break-all; color:#38bdf8; font-size:12px; margin-top:8px;">${item.content}</pre></div>`;
+          let badge = item.status === 'pending' ? '<span class="badge badge-pending">Pending</span>' : '<span class="badge">Approved</span>';
+          let delivery = item.status === 'approved' ? `<pre style="background:rgba(0,0,0,0.5); padding:8px; border-radius:6px; color:#38bdf8; font-size:11px; overflow-x:auto;">${item.content}</pre>` : '<p style="color:#fbbf24; font-size:12px;">⏳ Verifying payment...</p>';
 
-          list.innerHTML += `<div class="history-item"><div style="display:flex; justify-content:space-between; align-items:center;"><h4 style="margin:0; color:#fbbf24;">${item.productName} - ₹${item.price}</h4>${statusBadge}</div><p style="margin:6px 0; font-size:13px; color:#94a3b8;">UTR: ${item.utr}</p>${deliveryContent}</div>`;
+          list.innerHTML += `
+            <div class="history-item">
+              <div style="display:flex; justify-content:space-between;">
+                <b>${item.productName}</b> ${badge}
+              </div>
+              <p style="font-size:12px; color:#94a3b8; margin:4px 0;">UTR: ${item.utr}</p>
+              ${delivery}
+            </div>
+          `;
         }
       });
-      if(count === 0) list.innerHTML = '<p>No purchases yet.</p>';
+      if (count === 0) list.innerHTML = '<p>No purchases yet.</p>';
     });
-  }
-
-  function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => alert('Copied successfully!'));
   }
 
   function loadAdminInventory() {
@@ -846,35 +604,24 @@
         let cList = document.getElementById('adminCategoryList');
         cList.innerHTML = '';
         let products = snapshot.val();
+        if (!products) return;
+
         let categories = {};
-        Object.keys(metaMap).forEach(cat => { categories[cat] = { price: metaMap[cat].price, items: [] }; });
-        if(products) {
-          Object.keys(products).forEach(key => {
-            let p = products[key];
-            let cat = p.category || 'General';
-            if(!categories[cat]) categories[cat] = { price: p.price, items: [] };
-            categories[cat].items.push({ id: key, ...p });
-          });
-        }
+        Object.keys(products).forEach((key) => {
+          let p = products[key];
+          let cat = p.category || 'General';
+          if (!categories[cat]) categories[cat] = [];
+          categories[cat].push({ id: key, ...p });
+        });
+
         Object.keys(categories).forEach(cat => {
-          let data = categories[cat];
           let itemsHtml = '';
-          data.items.forEach(item => {
-            let badge = item.status === 'sold' ? '<span class="badge badge-sold">Sold</span>' : (item.status === 'pending' ? '<span class="badge badge-pending">Pending</span>' : '<span class="badge">Available</span>');
-            itemsHtml += `<div style="padding:6px; font-size:13px; display:flex; justify-content:space-between; align-items:center;"><b>${item.name}</b> (₹${item.price}) ${badge} <button onclick="db.ref('products/${item.id}').remove(); loadAdminInventory();" style="width:auto; background:#dc2626; padding:2px 6px; font-size:10px;">Del</button></div>`;
+          categories[cat].forEach(item => {
+            itemsHtml += `<div style="font-size:12px; display:flex; justify-content:space-between; margin:4px 0;"><span>${item.name}</span> <button onclick="db.ref('products/${item.id}').remove(); loadAdminInventory();" style="width:auto; background:#dc2626; padding:2px 6px; font-size:10px;">X</button></div>`;
           });
-          cList.innerHTML += `<div class="category-card"><h4 style="margin:0; color:#ff3366;">📁 ${cat} (₹${data.price})</h4>${itemsHtml}</div>`;
+          cList.innerHTML += `<div class="category-card"><h4>📁 ${cat}</h4>${itemsHtml}</div>`;
         });
       });
-    });
-  }
-
-  function loadAdminData() {
-    db.ref('users').once('value', (s) => {
-      let uList = document.getElementById('adminUsersList');
-      uList.innerHTML = '<h5>Registered Users:</h5>';
-      let users = s.val();
-      if(users) Object.keys(users).forEach(k => uList.innerHTML += `<div style="font-size:12px;">👤 ${users[k].email}</div>`);
     });
   }
 </script>
