@@ -773,30 +773,70 @@
         if(item.user === currentUser) {
           count++;
           let statusBadge = item.status === 'pending' ? '<span class="badge badge-pending">Pending</span>' : '<span class="badge">Approved & Unlocked</span>';
-          let deliveryContent = item.status === 'pending' ? '<p style="font-size:13px; color:#fbbf24; margin-top:8px;">⏳ Waiting for admin verification.</p>' : `<div style="background:rgba(0,0,0,0.6); padding:12px; border-radius:8px; margin-top:10px;"><button onclick="copyRawContent('content_${item.id}')" class="copy-btn">📋 Copy Exact Text/JSON</button><pre id="content_${item.id}" style="white-space:pre-wrap; word-break:break-all; margin:8px 0 0 0; color:#38bdf8; font-family:monospace; font-size:12px; max-height:200px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">${item.content}</pre></div>`;
+          
+          let historyDiv = document.createElement('div');
+          historyDiv.className = 'history-item';
+          
+          let headerDiv = document.createElement('div');
+          headerDiv.style.display = 'flex';
+          headerDiv.style.justifyContent = 'space-between';
+          headerDiv.style.alignItems = 'center';
+          headerDiv.innerHTML = `<h4 style="margin:0; color:#fbbf24;">${item.productName} - ₹${item.price}</h4>${statusBadge}`;
+          historyDiv.appendChild(headerDiv);
 
-          list.innerHTML += `
-            <div class="history-item">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h4 style="margin:0; color:#fbbf24;">${item.productName} - ₹${item.price}</h4>
-                ${statusBadge}
-              </div>
-              <p style="margin:6px 0; font-size:13px; color:#94a3b8;">UTR: ${item.utr} | Date: ${item.date}</p>
-              ${deliveryContent}
-            </div>
-          `;
+          let infoP = document.createElement('p');
+          infoP.style.margin = '6px 0';
+          infoP.style.fontSize = '13px';
+          infoP.style.color = '#94a3b8';
+          infoP.innerText = `UTR: ${item.utr} | Date: ${item.date}`;
+          historyDiv.appendChild(infoP);
+
+          if(item.status === 'approved') {
+            let deliveryBox = document.createElement('div');
+            deliveryBox.style.background = 'rgba(0,0,0,0.6)';
+            deliveryBox.style.padding = '12px';
+            deliveryBox.style.borderRadius = '8px';
+            deliveryBox.style.marginTop = '10px';
+
+            let copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.innerText = '📋 Copy Exact Text / JSON';
+            copyBtn.onclick = function() {
+              navigator.clipboard.writeText(item.content).then(() => {
+                alert('Exact text/JSON copied to clipboard successfully!');
+              });
+            };
+            deliveryBox.appendChild(copyBtn);
+
+            let preTag = document.createElement('pre');
+            preTag.style.whiteSpace = 'pre-wrap';
+            preTag.style.wordBreak = 'break-all';
+            preTag.style.margin = '8px 0 0 0';
+            preTag.style.color = '#38bdf8';
+            preTag.style.fontFamily = 'monospace';
+            preTag.style.fontSize = '12px';
+            preTag.style.maxHeight = '200px';
+            preTag.style.overflowY = 'auto';
+            preTag.style.background = 'rgba(0,0,0,0.3)';
+            preTag.style.padding = '8px';
+            preTag.style.borderRadius = '6px';
+            preTag.textContent = item.content; // Safely sets raw text/JSON preserving exact format & quotes
+            deliveryBox.appendChild(preTag);
+
+            historyDiv.appendChild(deliveryBox);
+          } else {
+            let waitP = document.createElement('p');
+            waitP.style.fontSize = '13px';
+            waitP.style.color = '#fbbf24';
+            waitP.style.marginTop = '8px';
+            waitP.innerText = '⏳ Waiting for admin verification.';
+            historyDiv.appendChild(waitP);
+          }
+
+          list.appendChild(historyDiv);
         }
       });
       if(count === 0) { list.innerHTML = '<p>No purchases yet.</p>'; }
-    });
-  }
-
-  function copyRawContent(elementId) {
-    let text = document.getElementById(elementId).innerText;
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Exact text/JSON copied to clipboard successfully!');
-    }).catch(err => {
-      alert('Failed to copy!');
     });
   }
 
